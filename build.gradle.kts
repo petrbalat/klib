@@ -21,7 +21,7 @@ plugins {
 }
 
 allprojects {
-    version = "0.3.0-SNAPSHOT"
+    version = "0.3.2"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
@@ -48,6 +48,7 @@ subprojects {
 
     apply {
         plugin("io.spring.dependency-management")
+        plugin("maven")
     }
 }
 //

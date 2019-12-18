@@ -10,6 +10,6 @@ repositories {
     maven { setUrl("https://jitpack.io") }
 }
 
-implementation("cz.petrbalat.klib:std:0.2")
+implementation("com.github.petrbalat.klib:jdk:VERSION")
 
 ```
