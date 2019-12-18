@@ -43,6 +43,7 @@ allprojects {
 
 subprojects {
     repositories {
+        jcenter()
         mavenCentral()
     }
 
@@ -50,3 +51,10 @@ subprojects {
         plugin("io.spring.dependency-management")
     }
 }
+//
+//configure(subprojects) {
+//
+//    dependencies {
+//
+//    }
+//}
