@@ -5,8 +5,6 @@ import java.text.Normalizer
 import java.util.*
 import java.util.regex.Pattern
 
-inline val random get() = kotlin.random.Random
-
 fun randomString(length: Int): String {
     val uuid = UUID.randomUUID().toString().replace("-", "")
     return if (length < uuid.length) uuid.substring(0, length) else uuid

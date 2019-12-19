@@ -31,3 +31,5 @@ interface Describe {
 
     val text: String
 }
+
+inline val random get() = kotlin.random.Random
