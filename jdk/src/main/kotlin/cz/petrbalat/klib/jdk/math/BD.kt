@@ -25,19 +25,37 @@ inline class BD(val value: BigDecimal) : Comparable<BD> {
 
     operator fun plus(other: BD): BD = this.value.plus(other.value).toBD()
 
+    operator fun plus(other: Number): BD = this.value.plus(other.toBigDecimal()).toBD()
+
     operator fun minus(other: BD): BD = this.value.minus(other.value).toBD()
+
+    operator fun minus(other: Number): BD = this.value.minus(other.toBigDecimal()).toBD()
 
     operator fun div(other: BD): BD = (this.value divide128 other.value).toBD()
 
+    operator fun div(other: Number): BD = (this.value divide128 other.toBigDecimal()).toBD()
+
     operator fun times(other: BD): BD = (this.value.times(other.value)).toBD()
 
+    operator fun times(other: Number): BD = this.value.times(other.toBigDecimal()).toBD()
+
     operator fun rem(other: BD): BD = (this.value.rem(other.value)).toBD()
+
+    operator fun rem(other: Number): BD = (this.value.rem(other.toBigDecimal())).toBD()
 
     operator fun unaryMinus(): BD = this.value.unaryMinus().toBD()
 
     operator fun inc(): BD = this.value.inc().toBD()
 
     operator fun dec(): BD = this.value.inc().toBD()
+
+    infix fun plusPercent(percent: BD): BD = this + (percent.value percentOf this.value).toBD()
+
+    infix fun plusPercent(percent: Number): BD = this + (percent.toBigDecimal() percentOf this.value).toBD()
+
+    infix fun minusPercent(percent: BD): BD = this - (percent.value minusPercent this.value).toBD()
+
+    infix fun minusPercent(percent: Number): BD = this - (percent.toBigDecimal() minusPercent this.value).toBD()
 }
 
 fun BD?.orZEro(): BD = this ?: BigDecimal.ZERO.toBD()
