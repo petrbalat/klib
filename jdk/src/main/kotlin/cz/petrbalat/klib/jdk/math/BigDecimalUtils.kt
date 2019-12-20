@@ -22,7 +22,7 @@ inline fun BigDecimal?.orZero(): BigDecimal = this ?: BigDecimal.ZERO
 /**
  * porovnává zda jsou da bigDecimaly stejné
  */
-inline infix fun BigDecimal.isEquals(other: BigDecimal): Boolean = this.compareTo(other) == 0
+inline infix fun BigDecimal.equalsTo(other: BigDecimal): Boolean = this.compareTo(other) == 0
 
 /**
  * vydělí správně s 128 přesností viz BigDecimal#divide(other, MathContext.DECIMAL128)

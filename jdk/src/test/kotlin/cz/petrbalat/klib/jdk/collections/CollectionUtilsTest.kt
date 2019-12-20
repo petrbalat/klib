@@ -1,6 +1,6 @@
 package cz.petrbalat.klib.jdk.collections
 
-import cz.petrbalat.klib.jdk.math.isEquals
+import cz.petrbalat.klib.jdk.math.equalsTo
 import java.math.BigDecimal
 import kotlin.test.*
 
@@ -41,7 +41,7 @@ class CollectionUtilsTest {
         val one = listOf(BigDecimal.ZERO, BigDecimal.ONE)
         assertEquals(1.toBigDecimal(), one.sumByBigDecimal { it })
         assertEquals(11.toBigDecimal(), (one + BigDecimal.TEN).sumByBigDecimal { it })
-        assertTrue(3.5.toBigDecimal() isEquals (one + 2.5.toBigDecimal()).sumByBigDecimal { it })
+        assertTrue(3.5.toBigDecimal() equalsTo (one + 2.5.toBigDecimal()).sumByBigDecimal { it })
     }
 
 }
