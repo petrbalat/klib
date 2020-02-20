@@ -14,6 +14,8 @@ tasks.getByName<BootJar>("bootJar") {
 }
 
 dependencies {
+	implementation(kotlin("stdlib-jdk8"))
+
 	implementation("org.springframework.boot:spring-boot-starter-mail")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {

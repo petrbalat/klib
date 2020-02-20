@@ -34,6 +34,7 @@ open class SmtpEmailService(private val mailSender: JavaMailSender,
 
             logger.info("Odesílám $dto k $to")
             mailSender.send(mimeMessage)
+            logger.info("Úspěšně odeslán email $dto")
 
             return AsyncResult(EmailResultDto(true))
         } catch (th: Throwable) {
