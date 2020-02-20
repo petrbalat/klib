@@ -1,2 +1,2 @@
 rootProject.name = "klib"
-include("spring-boot", "jdk")
+include("spring-boot", "spring-boot-mail", "jdk")
