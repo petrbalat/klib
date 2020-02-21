@@ -22,19 +22,19 @@ open class SmtpEmailService(private val mailSender: JavaMailSender,
             val from = dto.from ?: defaultFrom
             val dto = dto.copy(from = from)
             val mimeMessage: MimeMessage = mailSender.createMimeMessage()
-            val message = MimeMessageHelper(mimeMessage, dto.attachments.any())
-            message.setFrom(from)
-            dto.attachments.forEach {
-                message.addAttachment(it.name, it.stream)
+            MimeMessageHelper(mimeMessage, dto.attachments.any()).apply {
+                setFrom(from)
+                setTo(to)
+                setSubject(dto.subject)
+                setText(dto.body, dto.html)
+                dto.attachments.forEach { ea ->
+                    addAttachment(ea.name, ea.stream)
+                }
             }
-            message.setTo(to)
-            message.setSubject(dto.subject)
 
-            message.setText(dto.body, dto.html)
-
-            logger.info("Odesílám $dto k $to")
+            logger.info("Odesílám email(${dto.hashCode()}) $dto k $to")
             mailSender.send(mimeMessage)
-            logger.info("Úspěšně odeslán email $dto")
+            logger.info("Email(${dto.hashCode()}) úspěšně odeslán ")
 
             return AsyncResult(EmailResultDto(true))
         } catch (th: Throwable) {
