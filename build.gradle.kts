@@ -14,14 +14,14 @@ repositories {
 }
 
 plugins {
-    id("org.springframework.boot") version "2.2.4.RELEASE" apply false
+    id("org.springframework.boot") version "2.2.5.RELEASE" apply false
     id("io.spring.dependency-management") version "1.0.8.RELEASE" apply false
     kotlin("jvm") version "1.3.61" apply false
     kotlin("plugin.spring") version "1.3.61" apply false
 }
 
 allprojects {
-    version = "0.3.4"
+    version = "0.3.5"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
