@@ -1,11 +1,12 @@
 package cz.petrbalat.klib.nats
 
 import cz.petrbalat.klib.spring.nats.NatsTemplate
-import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
+import kotlin.test.Ignore
+import kotlin.test.Test
 
-@SpringBootTest
+//@SpringBootTest
+@Ignore
 class TemplateTests {
 
     @Autowired

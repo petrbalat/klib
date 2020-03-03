@@ -5,7 +5,7 @@ import cz.petrbalat.klib.spring.nats.streaming.NatsStreamingListener
 import org.slf4j.LoggerFactory
 
 @NatsComponent
-class StreamingListenerTest  {
+class StreamingListener  {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
