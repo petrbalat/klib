@@ -10,15 +10,17 @@ class ListenerTest {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @NatsListener("test.>")
+    @NatsListener("aaa")
     fun onTest(data: TestDto) {
         logger.info("Delivered $data")
     }
 
-    @NatsListener("test.>")
-    suspend fun onTest2(data: TestDto) {
+    @NatsListener("test.>", reply = true)
+    suspend fun onTest2(data: TestDto): TestDto {
         delay(1000)
         logger.info("Delivered suspend $data")
+
+        return data.copy(name = "reply")
     }
 
 }

@@ -7,7 +7,6 @@ package cz.petrbalat.klib.spring.nats
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.nats.client.Message
 import kotlinx.coroutines.runBlocking
-import kotlin.coroutines.intrinsics.*
 import java.lang.reflect.Method
 import kotlin.coroutines.suspendCoroutine
 

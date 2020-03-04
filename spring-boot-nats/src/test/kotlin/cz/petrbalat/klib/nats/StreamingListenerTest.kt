@@ -10,19 +10,18 @@ class StreamingListenerTest  {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    @NatsStreamingListener("test", durableName = "aaa", manualAcks = true)
-    fun onTestStream(data: TestDto) {
-//       throw RuntimeException(data.toString())
+    var counter = 1
 
-        logger.info("Delivered stream $data")
-    }
+    @NatsStreamingListener("test.ex", durableName = "aaa")
+    suspend fun onTestStream(data: TestDto) {
+        if (data.name.contains("2") && counter < 3) {
+            counter++
+            throw RuntimeException(data.toString())
+        }
 
-    @NatsStreamingListener("test", durableName = "bbb", manualAcks = true)
-    suspend fun onTestStream2(data: TestDto) {
-//       throw RuntimeException(data.toString())
         delay(200)
 
-        logger.info("Delivered suspend stream $data")
+        logger.info("Delivered stream $data")
     }
 
 }
