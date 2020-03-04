@@ -6,7 +6,7 @@ import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 
 @NatsComponent
-class Listener {
+class ListenerTest {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
