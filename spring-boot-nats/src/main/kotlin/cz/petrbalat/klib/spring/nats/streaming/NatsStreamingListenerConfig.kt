@@ -3,7 +3,10 @@ package cz.petrbalat.klib.spring.nats.streaming
 import com.fasterxml.jackson.databind.ObjectMapper
 import cz.petrbalat.klib.spring.nats.*
 import io.nats.client.Connection
-import io.nats.streaming.*
+import io.nats.streaming.Options
+import io.nats.streaming.StreamingConnection
+import io.nats.streaming.StreamingConnectionFactory
+import io.nats.streaming.SubscriptionOptions
 import io.nats.streaming.protobuf.StartPosition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -66,7 +69,11 @@ class NatsStreamingListenerConfig(private val mapper: ObjectMapper) : Applicatio
                 logger.info("Stream listen in bean $name on method ${method.name}")
 
                 val options: SubscriptionOptions = SubscriptionOptions.Builder()
-                        .durableName(annotation.durableName)
+                        .let {
+                            val durableName = annotation.durableName.takeIf { it.isNotBlank() }
+                            if (durableName != null) it.durableName(durableName)
+                            else it
+                        }
                         .let {
                             if (annotation.manualAcks) it.manualAcks()
                             else it
