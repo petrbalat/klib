@@ -17,4 +17,10 @@ annotation class NatsComponent
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention
-annotation class NatsListener(val subject: String, val queue: String = "")
+annotation class NatsListener(val subject: String,
+
+                              /**
+                               * When a message is published to the group NATS will deliver it to a one-and-only-one subscriber.
+                               */
+                              val queue: String = "",
+                              val reply: Boolean = false)

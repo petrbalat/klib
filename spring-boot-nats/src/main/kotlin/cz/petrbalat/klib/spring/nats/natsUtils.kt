@@ -5,18 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.nats.client.Message
 import java.lang.reflect.Method
 
-@kotlin.ExperimentalStdlibApi
-fun Method.invokeMessage(it: Message, bean: Any, mapper: ObjectMapper) {
-    this.invokeMessage(it.data, it, bean, mapper)
-}
+typealias StreamingMessage = io.nats.streaming.Message
 
 @kotlin.ExperimentalStdlibApi
-fun Method.invokeMessage(it: io.nats.streaming.Message, bean: Any, mapper: ObjectMapper) {
-    this.invokeMessage(it.data, it, bean, mapper)
-}
+fun Method.invokeMessage(it: Message, bean: Any, mapper: ObjectMapper): Any? =
+        this.invokeMessage(it.data, it, bean, mapper)
 
 @kotlin.ExperimentalStdlibApi
-fun Method.invokeMessage(data: ByteArray, message: Any, bean: Any, mapper: ObjectMapper) {
+fun Method.invokeMessage(it: StreamingMessage, bean: Any, mapper: ObjectMapper): Any? =
+        this.invokeMessage(it.data, it, bean, mapper)
+
+@kotlin.ExperimentalStdlibApi
+fun Method.invokeMessage(data: ByteArray, message: Any, bean: Any, mapper: ObjectMapper): Any? {
     //první parametr data
     val dataType = this.parameterTypes[0]
     val data: Any = if (dataType == String::class.java) data.decodeToString()
@@ -27,7 +27,7 @@ fun Method.invokeMessage(data: ByteArray, message: Any, bean: Any, mapper: Objec
         //druhý parametr musí být zpráva
         args = arrayOf(data, message)
     }
-    this.invoke(bean, *args)
+    return invoke(bean, *args)
 }
 
 const val NATS_PREFIX = "nats.streaming"
