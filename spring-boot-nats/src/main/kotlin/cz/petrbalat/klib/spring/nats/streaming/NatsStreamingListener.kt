@@ -3,7 +3,8 @@ package cz.petrbalat.klib.spring.nats.streaming
 import io.nats.streaming.protobuf.StartPosition
 
 /**
- * Annotation for method
+ *
+ * @author Petr Balat
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention

@@ -3,8 +3,6 @@ package cz.petrbalat.klib.spring.nats
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.nats.client.Connection
 import io.nats.client.Dispatcher
-import io.nats.client.Message
-import kotlinx.coroutines.future.await
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -12,9 +10,11 @@ import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import java.time.Duration
-import java.util.concurrent.CompletableFuture
 
+/**
+ * @author Petr Balat
+ *
+ */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(Connection::class)
 @kotlin.ExperimentalStdlibApi
@@ -69,9 +69,13 @@ class NatsListenerConfig(private val connection: Connection,
                     }
                 }
                 if (queue == null) {
-                    dispatcher.subscribe(subject)
+                    logger.info("Nats subscribe on subject $subject")
+                    val disp = dispatcher.subscribe(subject)
+                    logger.info("Nats subscribed on subject $subject, ${disp.hashCode()}")
                 } else {
-                    dispatcher.subscribe(subject, queue)
+                    logger.info("Nats subscribe on subject $subject, queue $queue")
+                    val disp = dispatcher.subscribe(subject, queue)
+                    logger.info("Nats subscribed on subject $subject, queue $queue, ${disp.hashCode()}")
                 }
             }
         }

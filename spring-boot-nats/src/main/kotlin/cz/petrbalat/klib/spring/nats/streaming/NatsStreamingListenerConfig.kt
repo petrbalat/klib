@@ -20,6 +20,10 @@ import org.springframework.context.ApplicationContextAware
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+/**
+ * @author Petr Balat
+ *
+ */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(StreamingConnection::class)
 @ConditionalOnProperty("clusterId", prefix = NATS_PREFIX)
@@ -54,6 +58,8 @@ class NatsStreamingListenerConfig(private val mapper: ObjectMapper) : Applicatio
 
         val connection: StreamingConnection = context.getBean()
 
+        logger.info("Nats streaming connection ${connection.hashCode()} ")
+
         natsBeans.forEach { (name: String, bean: Any) ->
             val methos = bean.javaClass.methods.mapNotNull {
                 val ann = it.declaredAnnotations.firstOrNull {
@@ -87,6 +93,8 @@ class NatsStreamingListenerConfig(private val mapper: ObjectMapper) : Applicatio
                         }
                         .build()
                 val queue: String? = annotation.queue.takeIf { it.isNotBlank() }
+
+                logger.info("Stream subscribe on subject ${annotation.subject}")
                 val sub = connection.subscribe(annotation.subject, queue, { message ->
                     try {
                         method.invokeMessage(message, bean, mapper)
@@ -98,6 +106,7 @@ class NatsStreamingListenerConfig(private val mapper: ObjectMapper) : Applicatio
                         throw th
                     }
                 }, options)
+                logger.info("Stream subscribed ${sub.hashCode()}")
             }
         }
     }

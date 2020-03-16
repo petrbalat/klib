@@ -1,5 +1,7 @@
 package cz.petrbalat.klib.spring.nats
-
+/**
+ * @author Petr Balat
+ */
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.nats.client.Message

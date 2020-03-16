@@ -4,6 +4,7 @@ import io.nats.streaming.AckHandler
 
 /**
  *  Serialize to json a send to nats streaming
+ *  @author Petr Balat
  */
 interface NatsStreamingTemplate {
 

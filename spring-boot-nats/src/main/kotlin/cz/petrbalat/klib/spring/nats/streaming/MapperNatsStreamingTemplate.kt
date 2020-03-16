@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.nats.streaming.AckHandler
 import io.nats.streaming.StreamingConnection
 
+/**
+ * @author Petr Balat
+ */
 class MapperNatsStreamingTemplate(private val connection: StreamingConnection,
                                   private val mapper: ObjectMapper): NatsStreamingTemplate {
     override fun publish(subject: String, body: Any) {
