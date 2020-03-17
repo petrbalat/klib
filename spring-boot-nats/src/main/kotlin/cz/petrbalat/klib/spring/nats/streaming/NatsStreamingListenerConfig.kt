@@ -10,13 +10,11 @@ import io.nats.streaming.SubscriptionOptions
 import io.nats.streaming.protobuf.StartPosition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.beans.factory.getBean
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.ApplicationContext
-import org.springframework.context.ApplicationContextAware
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -29,9 +27,7 @@ import org.springframework.context.annotation.Configuration
 @ConditionalOnProperty("clusterId", prefix = NATS_PREFIX)
 @AutoConfigureAfter(NatsListenerConfig::class)
 @kotlin.ExperimentalStdlibApi
-class NatsStreamingListenerConfig(private val mapper: ObjectMapper) : ApplicationContextAware {
-
-    private val logger = LoggerFactory.getLogger(javaClass)
+class NatsStreamingListenerConfig(private val mapper: ObjectMapper)  {
 
     @Bean
     @ConditionalOnMissingBean
@@ -49,64 +45,67 @@ class NatsStreamingListenerConfig(private val mapper: ObjectMapper) : Applicatio
 
     @Bean
     @ConditionalOnMissingBean
-    fun streamTemplate(connection: StreamingConnection): NatsStreamingTemplate
-            = MapperNatsStreamingTemplate(connection, mapper)
+    fun streamTemplate(connection: StreamingConnection): NatsStreamingTemplate =
+            MapperNatsStreamingTemplate(connection, mapper)
 
-    override fun setApplicationContext(context: ApplicationContext) {
-        val natsBeans: Map<String, Any> = context.getBeansWithAnnotation(NatsComponent::class.java)
-        logger.info("Found ${natsBeans.size} nats streaming beans")
+    @Configuration(proxyBeanMethods = false)
+    class SubscribeNatsStreamingConfig(context: ApplicationContext, connection: StreamingConnection, mapper: ObjectMapper) {
 
-        val connection: StreamingConnection = context.getBean()
+        private val logger = LoggerFactory.getLogger(javaClass)
 
-        logger.info("Nats streaming connection ${connection.hashCode()} ")
+        init {
+            logger.info("Nats streaming connection ${connection.hashCode()} ")
+            val natsBeans: Map<String, Any> = context.getBeansWithAnnotation(NatsComponent::class.java)
+            logger.info("Found ${natsBeans.size} nats streaming beans")
 
-        natsBeans.forEach { (name: String, bean: Any) ->
-            val methos = bean.javaClass.methods.mapNotNull {
-                val ann = it.declaredAnnotations.firstOrNull {
-                    it.annotationClass == NatsStreamingListener::class
-                } as? NatsStreamingListener ?: return@mapNotNull null
+            natsBeans.forEach { (name: String, bean: Any) ->
+                val methos = bean.javaClass.methods.mapNotNull {
+                    val ann = it.declaredAnnotations.firstOrNull {
+                        it.annotationClass == NatsStreamingListener::class
+                    } as? NatsStreamingListener ?: return@mapNotNull null
 
-                ann to it
-            }
-            if (methos.isEmpty()) {
-                logger.warn("Not found method with annotation ${NatsStreamingListener::class.simpleName} in bean name $name")
-            }
-            methos.forEach { (annotation, method) ->
-                logger.info("Stream listen in bean $name on method ${method.name}")
+                    ann to it
+                }
+                if (methos.isEmpty()) {
+                    logger.warn("Not found method with annotation ${NatsStreamingListener::class.simpleName} in bean name $name")
+                }
+                methos.forEach { (annotation, method) ->
+                    logger.info("Stream listen in bean $name on method ${method.name}")
 
-                val options: SubscriptionOptions = SubscriptionOptions.Builder()
-                        .let {
-                            val durableName = annotation.durableName.takeIf { it.isNotBlank() }
-                            if (durableName != null) it.durableName(durableName)
-                            else it
-                        }
-                        .let {
-                            if (annotation.manualAcks) it.manualAcks()
-                            else it
-                        }
-                        .let {
-                            when (annotation.startAt) {
-                                StartPosition.LastReceived -> it.startWithLastReceived()
-                                StartPosition.First -> it.deliverAllAvailable()
-                                else -> it
+                    val options: SubscriptionOptions = SubscriptionOptions.Builder()
+                            .let {
+                                val durableName = annotation.durableName.takeIf { it.isNotBlank() }
+                                if (durableName != null) it.durableName(durableName)
+                                else it
                             }
-                        }
-                        .build()
-                val queue: String? = annotation.queue.takeIf { it.isNotBlank() }
+                            .let {
+                                if (annotation.manualAcks) it.manualAcks()
+                                else it
+                            }
+                            .let {
+                                when (annotation.startAt) {
+                                    StartPosition.LastReceived -> it.startWithLastReceived()
+                                    StartPosition.First -> it.deliverAllAvailable()
+                                    else -> it
+                                }
+                            }
+                            .build()
+                    val queue: String? = annotation.queue.takeIf { it.isNotBlank() }
 
-                logger.info("Stream subscribe on subject ${annotation.subject}")
-                val sub = connection.subscribe(annotation.subject, queue, { message ->
-                    try {
-                        method.invokeMessage(message, bean, mapper)
-                        if (annotation.manualAcks && annotation.autoAck) {
-                            message.ack()
+                    logger.info("Stream subscribe on subject ${annotation.subject}")
+                    val sub = connection.subscribe(annotation.subject, queue, { message ->
+                        try {
+                            method.invokeMessage(message, bean, mapper)
+                            if (annotation.manualAcks && annotation.autoAck) {
+                                message.ack()
+                            }
+                        } catch (th: Throwable) {
+                            logger.error("Exception durink invoke nats listener in bean $name, method $name", th)
+                            throw th
                         }
-                    } catch (th: Throwable) {
-                        logger.error("Exception durink invoke nats listener in bean $name, method $name", th)
-                        throw th
-                    }
-                }, options)
-                logger.info("Stream subscribed ${sub.hashCode()}")
+                    }, options)
+                    logger.info("Stream subscribed ${sub.hashCode()}")
+                }
             }
         }
     }
