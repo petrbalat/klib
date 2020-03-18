@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(StreamingConnection::class)
-@ConditionalOnProperty("clusterId", prefix = NATS_PREFIX)
+@ConditionalOnProperty("clusterId", prefix = PREFIX)
 @AutoConfigureAfter(NatsListenerConfig::class)
 @kotlin.ExperimentalStdlibApi
 class NatsStreamingListenerConfig(private val mapper: ObjectMapper)  {
@@ -54,7 +54,6 @@ class NatsStreamingListenerConfig(private val mapper: ObjectMapper)  {
         private val logger = LoggerFactory.getLogger(javaClass)
 
         init {
-            logger.info("Nats streaming connection ${connection.hashCode()} ")
             val natsBeans: Map<String, Any> = context.getBeansWithAnnotation(NatsComponent::class.java)
             logger.info("Found ${natsBeans.size} nats streaming beans")
 
@@ -104,7 +103,6 @@ class NatsStreamingListenerConfig(private val mapper: ObjectMapper)  {
                             throw th
                         }
                     }, options)
-                    logger.info("Stream subscribed ${sub.hashCode()}")
                 }
             }
         }

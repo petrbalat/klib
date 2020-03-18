@@ -32,6 +32,6 @@ fun Method.invokeMessage(data: ByteArray, message: Any, bean: Any, mapper: Objec
     return invoke(bean, *args)
 }
 
-const val NATS_PREFIX = "nats.streaming"
-const val NATS_CLUSTER_ID = "\${$NATS_PREFIX.clusterId}"
-const val NATS_CLIENT_ID = "\${$NATS_PREFIX.clientId}"
+const val PREFIX = "nats.streaming"
+const val NATS_CLUSTER_ID = "\${$PREFIX.clusterId}"
+const val NATS_CLIENT_ID = "\${$PREFIX.clientId}"
