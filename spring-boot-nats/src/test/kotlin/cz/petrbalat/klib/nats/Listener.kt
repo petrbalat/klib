@@ -2,6 +2,7 @@ package cz.petrbalat.klib.nats
 
 import cz.petrbalat.klib.spring.nats.NatsComponent
 import cz.petrbalat.klib.spring.nats.NatsListener
+import kotlinx.coroutines.delay
 import org.slf4j.LoggerFactory
 
 @NatsComponent
@@ -12,6 +13,12 @@ class Listener {
     @NatsListener("test.>")
     fun onTest(data: TestDto) {
         logger.info("Delivered $data")
+    }
+
+    @NatsListener("test.>")
+    suspend fun onTest2(data: TestDto) {
+        delay(1000)
+        logger.info("Delivered suspend $data")
     }
 
 }
