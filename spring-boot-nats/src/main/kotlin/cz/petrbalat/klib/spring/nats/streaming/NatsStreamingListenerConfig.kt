@@ -95,16 +95,11 @@ class NatsStreamingListenerConfig(private val mapper: ObjectMapper)  {
                     val queue: String? = annotation.queue.takeIf { it.isNotBlank() }
 
                     logger.info("Stream subscribe on subject ${annotation.subject}")
-                    val sub = connection.subscribe(annotation.subject, queue, { message ->
-                        try {
+                    connection.subscribe(annotation.subject, queue, { message ->
                             method.invokeMessage(message, bean, mapper)
                             if (annotation.manualAcks && annotation.autoAck) {
                                 message.ack()
                             }
-                        } catch (th: Throwable) {
-                            logger.error("Exception durink invoke nats listener in bean $name, method $name", th)
-                            throw th
-                        }
                     }, options)
                 }
             }

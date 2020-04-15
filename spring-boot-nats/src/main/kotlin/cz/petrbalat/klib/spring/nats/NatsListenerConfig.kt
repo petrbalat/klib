@@ -54,24 +54,11 @@ class NatsListenerConfig(private val connection: Connection,
                     val subject: String = annotation.subject
                     val queue: String? = annotation.queue.takeIf { it.isNotBlank() }
                     val dispatcher: Dispatcher = connection.createDispatcher { message ->
-                        var reply = false
-                        var result: Any? = null
-                        try {
-                            result = method.invokeMessage(message, bean, mapper)
-                            reply = true
-                        } catch (th: Throwable) {
-                            logger.error("Exception durink invoke nats listener in bean $name, method $name", th)
-                            throw th
-                        }
+                        val result: Any? = method.invokeMessage(message, bean, mapper)
 
-                        try {
-                            if (reply && annotation.reply) {
-                                val replyBody: ByteArray = mapper.writeValueAsBytes(result)
-                                connection.publish(message.replyTo, replyBody)
-                            }
-                        } catch (th: Throwable) {
-                            logger.error("Exception durink reply in bean $name, method $name", th)
-                            throw th
+                        if (annotation.reply) {
+                            val replyBody: ByteArray = mapper.writeValueAsBytes(result)
+                            connection.publish(message.replyTo, replyBody)
                         }
                     }
                     if (queue == null) {
