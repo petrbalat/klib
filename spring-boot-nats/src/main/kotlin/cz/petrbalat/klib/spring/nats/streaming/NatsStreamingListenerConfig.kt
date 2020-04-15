@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import java.time.Duration
 
 /**
  * @author Petr Balat
@@ -33,12 +34,14 @@ class NatsStreamingListenerConfig(private val mapper: ObjectMapper)  {
     @ConditionalOnMissingBean
     fun streaming(connection: Connection,
                   @Value(NATS_CLUSTER_ID) clusterId: String,
-                  @Value(NATS_CLIENT_ID) clientId: String
-    ): StreamingConnection {
+                  @Value(NATS_CLIENT_ID) clientId: String,
+                  @Value("\${$PREFIX.ackTimeout:#{null}}") ackTimeout: Duration?
+                  ): StreamingConnection {
         val options = Options.Builder()
                 .clusterId(clusterId)
                 .clientId(clientId)
                 .natsConn(connection)
+                .pubAckWait(ackTimeout ?: SubscriptionOptions.DEFAULT_ACK_WAIT)
                 .build()
         return StreamingConnectionFactory(options).createConnection()
     }
