@@ -6,13 +6,6 @@ plugins {
 	kotlin("plugin.spring")
 }
 
-val developmentOnly by configurations.creating
-configurations {
-	runtimeClasspath {
-		extendsFrom(developmentOnly)
-	}
-}
-
 tasks.getByName<Jar>("jar") {
 	enabled = true
 }
