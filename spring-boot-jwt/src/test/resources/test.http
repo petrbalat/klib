@@ -1,0 +1,41 @@
+#login
+POST http://localhost:8080/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "Peter",
+  "password": "111111"
+}
+
+###bad login
+POST http://localhost:8080/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "Peter2",
+  "password": "111111"
+}
+###
+###bad login
+POST http://localhost:8080/login
+Accept: application/json
+Content-Type: application/json
+
+{
+  "username": "Peter",
+  "password": "111112"
+}
+###
+
+#login
+GET http://localhost:8080/
+Accept: application/json
+
+
+###login
+GET http://localhost:8080/
+Accept: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ7XCJpZFwiOjEsXCJlbWFpbFwiOlwiUGV0ZXJcIixcImJpcnRoXCI6XCIxOTgyLTAxLTAxXCJ9IiwiaWF0IjoxNTg4NjI3NTE1fQ.ImX75GrWfFAkK-tsCbV-dNhH78HyPc-GVsj7QfN28Cs
+

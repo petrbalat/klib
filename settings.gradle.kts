@@ -13,5 +13,5 @@ pluginManagement {
 }
 
 rootProject.name = "klib"
-include("spring-boot-web", "spring-boot-mail", "spring-boot-nats", "geom", "jdk")
+include("spring-boot-jwt", "spring-boot-web", "spring-boot-mail", "spring-boot-nats", "geom", "jdk")
 

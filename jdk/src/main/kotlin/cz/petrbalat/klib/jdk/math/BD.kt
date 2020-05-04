@@ -6,7 +6,7 @@ import java.math.BigInteger
 /**
  * @author Petr Balat
  *
- * wraller over BigDecimal with operator +->< and mainly equalsTo method
+ * wrapper over BigDecimal with operator +->< and mainly equalsTo method
  *
  */
 inline class BD(val value: BigDecimal) : Comparable<BD> {
@@ -21,7 +21,7 @@ inline class BD(val value: BigDecimal) : Comparable<BD> {
     fun roundHalfUp(newScale: Int = 0): BD = value.roundHalfUp(newScale).toBD()
 
 //    TODO in kotlin 1.4
-//    override fun equals(other: Any?): Boolean = equal(other)
+//    override fun equals(other: Any?): Boolean = this equalsTo other
 
     operator fun plus(other: BD): BD = this.value.plus(other.value).toBD()
 
