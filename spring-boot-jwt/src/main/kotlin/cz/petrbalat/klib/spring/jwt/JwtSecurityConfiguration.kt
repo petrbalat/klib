@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.core.userdetails.UserDetails
+import java.time.Duration
+import java.time.Instant
 
 
 /**
@@ -31,9 +33,11 @@ class JwtSecurityConfiguration(private @Value("\${jwt.token.secret}") val secret
     @Bean
     @ConditionalOnMissingBean
     fun jwtAuthenticationFilter(authenticationManagerBuilder: AuthenticationManagerBuilder,
+                                @Value("\${jwt.token.expirationDateTime:#{null}}") expirationDateTime: Duration?,
                                 @Autowired(required = false) userPrepare: PrepareUserToJson<UserDetails>?): JWTAuthenticationFilter {
         logger.info("creating default JWTAuthenticationFilter")
-        return JWTAuthenticationFilter(secret, mapper, authenticationManagerBuilder, userPrepare)
+        val duration: Duration = expirationDateTime ?: Duration.ofDays(7)
+        return JWTAuthenticationFilter(secret, mapper, authenticationManagerBuilder, duration, userPrepare)
     }
 
     @Bean

@@ -4,6 +4,7 @@ package cz.petrbalat.klib.spring.jwt.mvc
  * @see https://auth0.com/blog/implementing-jwt-authentication-on-spring-boot/
  */
 import com.fasterxml.jackson.databind.ObjectMapper
+import cz.petrbalat.klib.jdk.datetime.toDate
 import cz.petrbalat.klib.spring.jwt.HEADER_STRING
 import cz.petrbalat.klib.spring.jwt.TOKEN_PREFIX
 import io.jsonwebtoken.Jwts
@@ -14,6 +15,8 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import toKey
+import java.time.Duration
+import java.time.LocalDateTime
 import java.util.*
 import javax.servlet.FilterChain
 import javax.servlet.http.HttpServletRequest
@@ -33,9 +36,10 @@ import javax.servlet.http.HttpServletResponse
  * }
  */
 open class JWTAuthenticationFilter(private @Value("\${jwt.token.secret}") val secret: String,
-                              private val mapper: ObjectMapper,
-                              private val managerBulder: AuthenticationManagerBuilder,
-                              private val userPrepare: PrepareUserToJson<UserDetails>?) : UsernamePasswordAuthenticationFilter() {
+                                   private val mapper: ObjectMapper,
+                                   private val managerBulder: AuthenticationManagerBuilder,
+                                   private val expirationDateTime: Duration,
+                                   private val userPrepare: PrepareUserToJson<UserDetails>?) : UsernamePasswordAuthenticationFilter() {
 
     protected val serializer = JacksonSerializer(mapper)
 
@@ -70,10 +74,9 @@ open class JWTAuthenticationFilter(private @Value("\${jwt.token.secret}") val se
         val user = userPrepare?.prepare(user_) ?: user_
         val userJson: String = mapper.writeValueAsString(user)
         val compact: String = Jwts.builder()
-//                .setClaims(createClaims(account))
                 .setSubject(userJson)
                 .setIssuedAt(Date())
-//                .setExpiration(Date.from(expirationDateTime))
+                .setExpiration(LocalDateTime.now().plus(expirationDateTime).toDate())
                 .signWith(secret.toKey())
                 .serializeToJsonWith(serializer)
                 .compact()
