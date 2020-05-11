@@ -56,6 +56,8 @@ inline class BD(val value: BigDecimal) : Comparable<BD> {
     infix fun minusPercent(percent: BD): BD = this - (percent.value minusPercent this.value).toBD()
 
     infix fun minusPercent(percent: Number): BD = this - (percent.toBigDecimal() minusPercent this.value).toBD()
+
+    override fun toString(): String = value.toString()
 }
 
 fun BD?.orZEro(): BD = this ?: BigDecimal.ZERO.toBD()
