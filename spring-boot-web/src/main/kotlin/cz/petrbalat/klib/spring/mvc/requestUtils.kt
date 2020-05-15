@@ -1,6 +1,7 @@
 package cz.petrbalat.klib.spring.mvc
 
 import cz.petrbalat.klib.jdk.string.emptyToNull
+import cz.petrbalat.klib.jdk.tryOn
 import java.net.URL
 import javax.servlet.http.HttpServletRequest
 
@@ -20,4 +21,8 @@ val HttpServletRequest.clientIp: String
 
 val HttpServletRequest.ajax: Boolean get() = getHeader("X-Requested-With") == "XMLHttpRequest"
 
-val HttpServletRequest.referrer: URL? get() = getHeader("Referer")?.let { URL(it) }
+val HttpServletRequest.referrer: URL? get() = getHeader("Referer")?.let {
+    tryOn {
+        URL(it)
+    }
+}

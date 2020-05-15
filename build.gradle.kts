@@ -22,7 +22,7 @@ plugins {
 }
 
 allprojects {
-    version = "0.5.0"
+    version = "0.5.1"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
