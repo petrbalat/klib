@@ -38,7 +38,7 @@ import javax.servlet.http.HttpServletResponse
 open class JWTAuthenticationFilter(private @Value("\${jwt.token.secret}") val secret: String,
                                    private val mapper: ObjectMapper,
                                    private val managerBulder: AuthenticationManagerBuilder,
-                                   private val expirationDateTime: Duration,
+                                   val expirationDateTime: Duration,
                                    private val userPrepare: PrepareUserToJson<UserDetails>?) : UsernamePasswordAuthenticationFilter() {
 
     protected val serializer = JacksonSerializer(mapper)
