@@ -1,7 +1,8 @@
 pluginManagement {
     repositories {
-        maven { url = uri("https://repo.spring.io/milestone") }
         gradlePluginPortal()
+        maven( url = uri("https://dl.bintray.com/kotlin/kotlin-eap/"))
+//        maven { url = uri("https://repo.spring.io/milestone") }
     }
     resolutionStrategy {
         eachPlugin {
