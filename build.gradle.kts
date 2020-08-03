@@ -31,7 +31,7 @@ allprojects {
 
     tasks.withType<KotlinCompile> {
         kotlinOptions {
-            freeCompilerArgs = listOf("-Xjsr305=strict", "-progressive", "-Xjvm-default=enable", "-Xinline-classes")
+            freeCompilerArgs = listOf("-Xjsr305=strict", "-progressive", "-Xjvm-default=all", "-Xinline-classes")
             jvmTarget = "1.8"
         }
     }
