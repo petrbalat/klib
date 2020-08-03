@@ -54,3 +54,13 @@ inline infix fun BigDecimal.minusPercent(percent: BigDecimal): BigDecimal = this
  * zaokrouhlí matematicky 0.5 nahoru
  */
 fun BigDecimal.roundHalfUp(newScale: Int = 0): BigDecimal = this.setScale(newScale, RoundingMode.HALF_UP)
+
+/**
+ * zaokrouhlí nahoru
+ */
+fun BigDecimal.roundCeiling(newScale: Int = 0): BigDecimal = this.setScale(newScale, RoundingMode.CEILING)
+
+/**
+ * zaokrouhlí dol
+ */
+fun BigDecimal.roundFloor(newScale: Int = 0): BigDecimal = this.setScale(newScale, RoundingMode.FLOOR)

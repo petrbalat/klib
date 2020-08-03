@@ -95,4 +95,15 @@ class BigDecimalUtilTest {
         assertTrue(100.toBigDecimal() equalsTo (value * BigDecimal(3)).roundHalfUp(2))
     }
 
+    @Test
+    fun testRound(): Unit {
+        assertEquals(BigDecimal(13), BigDecimal(12.458).roundCeiling())
+        assertEquals(BigDecimal("12.46"), BigDecimal(12.458).roundCeiling(2))
+        assertEquals(BigDecimal(12), BigDecimal(12.408).roundFloor())
+        assertEquals(BigDecimal("12.4"), BigDecimal(12.408).roundFloor(1))
+        assertEquals(BigDecimal("12.40"), BigDecimal(12.408).roundFloor(2))
+        assertEquals(BigDecimal(12), BigDecimal(12.458).roundHalfUp())
+        assertEquals(BigDecimal(13), BigDecimal(12.508).roundHalfUp())
+    }
+
 }
