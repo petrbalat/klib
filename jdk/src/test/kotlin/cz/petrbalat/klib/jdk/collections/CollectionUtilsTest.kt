@@ -11,7 +11,6 @@ class CollectionUtilsTest {
 
     private val testList = listOf(1, 2, 3, 4, 5)
 
-
     @Test
     fun next() {
         assertEquals(4, testList.next(3))
@@ -28,13 +27,15 @@ class CollectionUtilsTest {
 
     @Test
     fun random() {
-        assertNotNull(testList.random())
-        assertNotNull(testList.random())
-        assertNotNull(testList.random())
+        val r1 = testList.random()
+        assertNotNull(r1)
+        val r2 = testList.random()
+        assertNotNull(r2)
+        val r3 = testList.random()
+        assertNotNull(r3)
 
-        assertNotEquals(testList.random(), testList.random())
+        assertNotEquals(3, hashSetOf(r1, r2, r3).size)
     }
-
 
     @Test
     fun sumByBigDecimal() {
