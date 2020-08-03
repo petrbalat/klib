@@ -22,15 +22,7 @@ fun <T> List<T>.previous(item: T): T? {
     return getOrNull(index - 1)
 }
 
-inline fun <T> Iterable<T>.sumByBigDecimal(selector: (T) -> BigDecimal): BigDecimal {
-    var sum = BigDecimal.ZERO
-    for (element in this) {
-        sum += selector(element)
-    }
-    return sum
-}
 
-
-fun Iterable<BigDecimal>.sum(): BigDecimal = this.sumByBigDecimal { it }
+fun Iterable<BigDecimal>.sum(): BigDecimal = this.sumOf { it }
 
 fun <K,V> Map.Entry<K,V>.toMap(): Map<K,V> = mapOf(toPair())

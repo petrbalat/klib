@@ -34,15 +34,15 @@ class CollectionUtilsTest {
         val r3 = testList.random()
         assertNotNull(r3)
 
-        assertNotEquals(3, hashSetOf(r1, r2, r3).size)
+        assertNotEquals(1, hashSetOf(r1, r2, r3).size)
     }
 
     @Test
     fun sumByBigDecimal() {
         val one = listOf(BigDecimal.ZERO, BigDecimal.ONE)
-        assertEquals(1.toBigDecimal(), one.sumByBigDecimal { it })
-        assertEquals(11.toBigDecimal(), (one + BigDecimal.TEN).sumByBigDecimal { it })
-        assertTrue(3.5.toBigDecimal() equalsTo (one + 2.5.toBigDecimal()).sumByBigDecimal { it })
+        assertEquals(1.toBigDecimal(), one.sum())
+        assertEquals(11.toBigDecimal(), (one + BigDecimal.TEN).sum())
+        assertTrue(3.5.toBigDecimal() equalsTo (one + 2.5.toBigDecimal()).sum())
     }
 
 }
