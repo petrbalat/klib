@@ -15,8 +15,8 @@ repositories {
 }
 
 plugins {
-    id("org.springframework.boot") version "2.3.2.RELEASE" apply false
-    id("io.spring.dependency-management") version "1.0.9.RELEASE" apply false
+    id("org.springframework.boot") version "2.3.3.RELEASE" apply false
+    id("io.spring.dependency-management") version "1.0.10.RELEASE" apply false
     id("com.jfrog.bintray") version "1.8.5" apply false
     kotlin("jvm") version "1.4.0-rc" apply false
     kotlin("plugin.spring") version "1.4.0-rc" apply false
@@ -24,7 +24,7 @@ plugins {
 
 allprojects {
     group = "com.github.petrbalat.klib"
-    version = "0.6.1"
+    version = "0.6.2"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
@@ -33,7 +33,7 @@ allprojects {
 
     tasks.withType<KotlinCompile> {
         kotlinOptions {
-            freeCompilerArgs = listOf("-Xjsr305=strict", "-progressive", "-Xjvm-default=all", "-Xinline-classes")
+            freeCompilerArgs = listOf("-Xjsr305=strict", "-progressive", "-Xjvm-default=all")
             jvmTarget = "1.8"
         }
     }
