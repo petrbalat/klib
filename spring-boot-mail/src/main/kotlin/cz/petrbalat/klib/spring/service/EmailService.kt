@@ -38,7 +38,7 @@ open class SmtpEmailService(private val mailSender: JavaMailSender,
 
             return AsyncResult(EmailResultDto(true))
         } catch (th: Throwable) {
-            logger.error("Chyba při odeslání emailu", th)
+            logger.error("Chyba při odeslání emailu ${to.joinToString()}", th)
             return AsyncResult(EmailResultDto(false, th))
         }
     }
