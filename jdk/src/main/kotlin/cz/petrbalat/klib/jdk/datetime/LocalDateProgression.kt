@@ -18,6 +18,8 @@ class LocalDateProgression(override val start: LocalDate,
     infix fun stepWeeks(weeks: Long) = LocalDateProgression(start, endInclusive, weeks, ChronoUnit.WEEKS)
 
     infix fun stepMonths(motnhs: Long) = LocalDateProgression(start, endInclusive, motnhs, ChronoUnit.MONTHS)
+
+    infix fun stepMinutes(motnhs: Long) = LocalDateProgression(start, endInclusive, motnhs, ChronoUnit.MINUTES)
 }
 
 internal class LocalDateProgressionIterator(start: LocalDate,

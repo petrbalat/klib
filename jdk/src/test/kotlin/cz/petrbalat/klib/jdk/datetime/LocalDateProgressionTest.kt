@@ -1,6 +1,7 @@
 package cz.petrbalat.klib.jdk.datetime
 
 import java.time.LocalDate
+import java.time.LocalDateTime
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -24,5 +25,12 @@ class LocalDateProgressionTest {
         assertEquals(2, days.size)
         assertEquals(today, days.first())
         assertEquals(today.plusDays(2), days.last())
+    }
+
+    @Test
+    fun rangeToStepMinutes() {
+        val minutes: List<LocalDateTime> = (now..now.plusMinutes(6) stepMinutes 2).toList()
+        assertEquals(4, minutes.size)
+        assertEquals(now.removeSec(), minutes.first().removeSec())
     }
 }
