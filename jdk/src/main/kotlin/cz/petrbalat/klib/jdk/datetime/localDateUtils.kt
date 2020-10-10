@@ -31,6 +31,8 @@ fun LocalDateTime.toDate(zoneId: ZoneId = ZoneId.systemDefault()): Date {
     return Date.from(instant)
 }
 
+fun ZoneId.toOffset() = Instant.now().atZone(this).offset
+
 fun Date.toLocalDate(zoneId: ZoneId = ZoneId.systemDefault()): LocalDate = toLocalDateTime(zoneId).toLocalDate()
 
 fun Date.toLocalDateTime(zoneId: ZoneId = ZoneId.systemDefault()): LocalDateTime {
