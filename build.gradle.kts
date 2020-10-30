@@ -15,7 +15,7 @@ repositories {
 }
 
 plugins {
-    id("org.springframework.boot") version "2.3.4.RELEASE" apply false
+    id("org.springframework.boot") version "2.3.5.RELEASE" apply false
     id("io.spring.dependency-management") version "1.0.10.RELEASE" apply false
     id("com.jfrog.bintray") version "1.8.5" apply false
     kotlin("jvm") version "1.4.10" apply false
@@ -24,7 +24,7 @@ plugins {
 
 allprojects {
     group = "com.github.petrbalat.klib"
-    version = "0.6.9"
+    version = "0.7.0"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
