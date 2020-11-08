@@ -57,15 +57,22 @@ fun isCzechStateHolidays(day: LocalDate): Boolean {
 
 fun isCzechWorkingDay(day: LocalDate): Boolean = !isCzechStateHolidays(day) && !day.weekend
 
-fun LocalDate.addCzechWorkingDay(day:Long): LocalDate {
-    if (day < 0) throw Error("day is negative")
-
+fun LocalDate.addCzechWorkingDay(day: Long): LocalDate {
     var rest = day
-    var workDay : LocalDate = this
-    while (rest > 0) {
-        workDay = workDay.plusDays(1)
-        if (isCzechWorkingDay(workDay)) {
-            rest--
+    var workDay: LocalDate = this
+    if (day > 0) {
+        while (rest > 0) {
+            workDay = workDay.plusDays(1)
+            if (isCzechWorkingDay(workDay)) {
+                rest--
+            }
+        }
+    } else {
+        while (rest < 0) {
+            workDay = workDay.minusDays(1)
+            if (isCzechWorkingDay(workDay)) {
+                rest++
+            }
         }
     }
 

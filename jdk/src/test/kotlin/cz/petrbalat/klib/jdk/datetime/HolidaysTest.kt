@@ -1,9 +1,5 @@
 package cz.petrbalat.klib.jdk.datetime
 
-import cz.petrbalat.klib.jdk.datetime.addCzechWorkingDay
-import cz.petrbalat.klib.jdk.datetime.easternMonday
-import cz.petrbalat.klib.jdk.datetime.rangeTo
-import cz.petrbalat.klib.jdk.datetime.weekend
 import java.time.LocalDate
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -63,5 +59,8 @@ class HolidaysTest {
         assertEquals(LocalDate.of(2017, 12, 22), LocalDate.of(2017, 12, 21).addCzechWorkingDay(1))
         assertEquals(LocalDate.of(2017, 12, 27), LocalDate.of(2017, 12, 21).addCzechWorkingDay(2))
         assertEquals(LocalDate.of(2017, 12, 29), LocalDate.of(2017, 12, 22).addCzechWorkingDay(3))
+
+        assertEquals(LocalDate.of(2020, 11, 6), LocalDate.of(2020, 11, 8).addCzechWorkingDay(-1))
+        assertEquals(LocalDate.of(2020, 11, 4), LocalDate.of(2020, 11, 6).addCzechWorkingDay(-2))
     }
 }

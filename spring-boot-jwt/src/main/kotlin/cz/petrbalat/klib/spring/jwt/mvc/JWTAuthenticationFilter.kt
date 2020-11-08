@@ -4,6 +4,7 @@ package cz.petrbalat.klib.spring.jwt.mvc
  * @see https://auth0.com/blog/implementing-jwt-authentication-on-spring-boot/
  */
 import com.fasterxml.jackson.databind.ObjectMapper
+import cz.petrbalat.klib.jdk.datetime.now
 import cz.petrbalat.klib.jdk.datetime.toDate
 import cz.petrbalat.klib.spring.jwt.HEADER_STRING
 import cz.petrbalat.klib.spring.jwt.TOKEN_PREFIX
@@ -16,7 +17,6 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import toKey
 import java.time.Duration
-import java.time.LocalDateTime
 import java.util.*
 import javax.servlet.FilterChain
 import javax.servlet.http.HttpServletRequest
@@ -76,7 +76,7 @@ open class JWTAuthenticationFilter(private @Value("\${jwt.token.secret}") val se
         val compact: String = Jwts.builder()
                 .setSubject(userJson)
                 .setIssuedAt(Date())
-                .setExpiration(LocalDateTime.now().plus(expirationDateTime).toDate())
+                .setExpiration(now.plus(expirationDateTime).toDate())
                 .signWith(secret.toKey())
                 .serializeToJsonWith(serializer)
                 .compact()
