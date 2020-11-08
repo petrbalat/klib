@@ -60,6 +60,7 @@ class HolidaysTest {
         assertEquals(LocalDate.of(2017, 12, 27), LocalDate.of(2017, 12, 21).addCzechWorkingDay(2))
         assertEquals(LocalDate.of(2017, 12, 29), LocalDate.of(2017, 12, 22).addCzechWorkingDay(3))
 
+        assertEquals(LocalDate.of(2020, 11, 6), LocalDate.of(2020, 11, 9).addCzechWorkingDay(-1))
         assertEquals(LocalDate.of(2020, 11, 6), LocalDate.of(2020, 11, 8).addCzechWorkingDay(-1))
         assertEquals(LocalDate.of(2020, 11, 4), LocalDate.of(2020, 11, 6).addCzechWorkingDay(-2))
     }
