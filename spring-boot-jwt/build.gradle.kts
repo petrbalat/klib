@@ -25,8 +25,8 @@ dependencies {
 	implementation("com.fasterxml.jackson.core:jackson-databind")
 
 	//	jwt
-	implementation("io.jsonwebtoken:jjwt-api:0.11.1")
-	implementation("io.jsonwebtoken:jjwt-impl:0.11.1")
+	implementation("io.jsonwebtoken:jjwt-api:0.11.2")
+	implementation("io.jsonwebtoken:jjwt-impl:0.11.2")
 
 	developmentOnly("org.springframework.boot:spring-boot-devtools")
 
