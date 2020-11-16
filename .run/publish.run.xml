@@ -1,11 +1,12 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="publish" type="CompoundRunConfigurationType">
-    <toRun name="klib:jdk [bintrayUpload]" type="GradleRunConfiguration" />
-    <toRun name="klib:jwt [bintrayUpload]" type="GradleRunConfiguration" />
     <toRun name="klib:geom [bintrayUpload]" type="GradleRunConfiguration" />
+    <toRun name="klib:retrofit2 [bintrayUpload]" type="GradleRunConfiguration" />
+    <toRun name="klib:web [bintrayUpload]" type="GradleRunConfiguration" />
     <toRun name="klib:nats [bintrayUpload]" type="GradleRunConfiguration" />
     <toRun name="klib:mail [bintrayUpload]" type="GradleRunConfiguration" />
-    <toRun name="klib:web [bintrayUpload]" type="GradleRunConfiguration" />
+    <toRun name="klib:jdk [bintrayUpload]" type="GradleRunConfiguration" />
+    <toRun name="klib:jwt [bintrayUpload]" type="GradleRunConfiguration" />
     <method v="2" />
   </configuration>
 </component>

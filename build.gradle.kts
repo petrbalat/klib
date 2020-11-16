@@ -25,7 +25,7 @@ plugins {
 
 allprojects {
     group = "com.github.petrbalat.klib"
-    version = "0.9.10"
+    version = "0.10.1"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
@@ -59,12 +59,17 @@ subprojects {
     }
 
     bintray {
-        val projectName = this@subprojects.name
-        user = System.getProperty("bintray.user")
-        key = System.getProperty("bintray.key")
+        val localProperties = File(rootDir, "local.properties").inputStream().use {
+            java.util.Properties().apply {
+                load(it)
+            }
+        }
+        user = localProperties.getProperty("bintray.user")
+        key = localProperties.getProperty("bintray.key")
         publish = true
         setPublications("mavenPublication")
 
+        val projectName = this@subprojects.name
         pkg.apply {
             repo = "klib"
             this.name = projectName
