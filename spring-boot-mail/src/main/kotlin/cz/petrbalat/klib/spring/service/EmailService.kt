@@ -1,5 +1,6 @@
 package cz.petrbalat.klib.spring.service
 
+import cz.petrbalat.klib.jdk.string.emptyToNull
 import org.slf4j.LoggerFactory
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
@@ -18,10 +19,12 @@ open class SmtpEmailService(private val mailSender: JavaMailSender,
 
     @Async
     override fun send(dto: EmailDto, vararg to: String): Future<EmailResultDto> {
+        val to: Array<String> = to.mapNotNull { it.trim().emptyToNull() }.toTypedArray()
         try {
             val from = dto.from ?: defaultFrom
             val dto = dto.copy(from = from)
             val mimeMessage: MimeMessage = mailSender.createMimeMessage()
+
             MimeMessageHelper(mimeMessage, dto.attachments.any()).apply {
                 setFrom(from)
                 setTo(to)
