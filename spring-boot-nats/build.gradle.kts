@@ -25,7 +25,7 @@ dependencies {
 
 	//	nats
 	implementation("io.nats:nats-spring:0.4.0")
-	implementation("io.nats:jnats:2.6.6")
+	implementation("io.nats:jnats:2.8.0")
 	implementation("io.nats:java-nats-streaming:2.2.3")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-json")
