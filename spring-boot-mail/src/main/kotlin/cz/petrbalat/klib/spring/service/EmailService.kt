@@ -5,8 +5,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
-import org.springframework.scheduling.annotation.AsyncResult
-import java.util.concurrent.Future
+import java.util.concurrent.CompletableFuture
 import javax.mail.internet.MimeMessage
 
 /**
@@ -18,7 +17,7 @@ open class SmtpEmailService(private val mailSender: JavaMailSender,
     private val logger = LoggerFactory.getLogger(javaClass)
 
     @Async
-    override fun send(dto: EmailDto, vararg to: String): Future<EmailResultDto> {
+    override fun send(dto: EmailDto, vararg to: String): CompletableFuture<EmailResultDto> {
         val to: Array<String> = to.mapNotNull { it.trim().emptyToNull() }.toTypedArray()
         try {
             val from = dto.from ?: defaultFrom
@@ -39,15 +38,15 @@ open class SmtpEmailService(private val mailSender: JavaMailSender,
             mailSender.send(mimeMessage)
             logger.info("Email(${dto.hashCode()}) úspěšně odeslán ")
 
-            return AsyncResult(EmailResultDto(true))
+            return CompletableFuture.completedFuture(EmailResultDto(true))
         } catch (th: Throwable) {
             logger.error("Chyba při odeslání emailu ${to.joinToString()}", th)
-            return AsyncResult(EmailResultDto(false, th))
+            return CompletableFuture.completedFuture(EmailResultDto(false, th))
         }
     }
 }
 
 interface EmailService {
 
-    fun send(dto: EmailDto, vararg to: String): Future<EmailResultDto>
+    fun send(dto: EmailDto, vararg to: String): CompletableFuture<EmailResultDto>
 }
