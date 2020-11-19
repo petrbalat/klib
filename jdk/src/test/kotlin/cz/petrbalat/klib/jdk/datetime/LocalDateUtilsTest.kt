@@ -1,6 +1,9 @@
 package cz.petrbalat.klib.jdk.datetime
 
-import java.time.*
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.Month
 import java.util.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -51,17 +54,6 @@ class LocalDateUtilsTest {
 
 
     @Test
-    fun testToLocalDateTime() {
-        val localDateTime = datum.toLocalDateTime(czechZone)
-        assertEquals(2014, localDateTime.year.toLong())
-        assertEquals(3, localDateTime.monthValue.toLong())
-        assertEquals(Month.MARCH, localDateTime.month)
-        assertEquals(13, localDateTime.dayOfMonth.toLong())
-        assertEquals(11, localDateTime.hour.toLong())
-        assertEquals(54, localDateTime.minute.toLong())
-    }
-
-    @Test
     fun testToLocalDate() {
         val localDate = datum.toLocalDate()
         assertEquals(2014, localDate.year.toLong())
@@ -101,24 +93,6 @@ class LocalDateUtilsTest {
         val test: LocalDate? = null
         assertEquals(LocalDate.MAX, test.orMax())
         assertEquals(test2016_7_26.atStartOfDay(), test2016_7_26.atStartOfDay().orMax())
-    }
-
-    @Test
-    fun pgZonedDateTimeFormat() {
-        val zonedDateTime: ZonedDateTime = ZonedDateTime.parse("2017-06-01 16:46:12+02", pgZonedDateTimeFormat)
-        assertEquals("+02:00", zonedDateTime.zone.id)
-        assertEquals("+02:00", zonedDateTime.offset.id)
-        assertEquals(LocalDateTime.of(2017, 6, 1, 16, 46, 12), zonedDateTime.toLocalDateTime())
-        assertEquals(zonedDateTime, zonedDateTime.toLocalDateTime().toCzechZoned())
-    }
-
-    @Test
-    fun pgZonedDateTimeFormat2() {
-        val zonedDateTime: ZonedDateTime = ZonedDateTime.parse("2017-06-01 16:46:12.381009+02", pgZonedDateTimeFormat2)
-        assertEquals("+02:00", zonedDateTime.zone.id)
-        assertEquals("+02:00", zonedDateTime.offset.id)
-        assertEquals(LocalDateTime.of(2017, 6, 1, 16, 46, 12, 381009000), zonedDateTime.toLocalDateTime())
-        assertEquals(zonedDateTime, zonedDateTime.toLocalDateTime().toCzechZoned())
     }
 
     @Test

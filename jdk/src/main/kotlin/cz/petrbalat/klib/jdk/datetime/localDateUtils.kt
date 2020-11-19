@@ -16,8 +16,6 @@ inline val today: LocalDate
 inline val now: LocalDateTime
     get() = LocalDateTime.now()
 
-val czechZone = ZoneId.of("+02:00")
-
 fun LocalDate?.orMin(): LocalDate = this ?: LocalDate.MIN
 fun LocalDate?.orMax(): LocalDate = this ?: LocalDate.MAX
 
@@ -43,10 +41,8 @@ fun Date.toLocalDateTime(zoneId: ZoneId = ZoneId.systemDefault()): LocalDateTime
 fun LocalDateTime.toOffsetDateTime(zoneId: ZoneId = ZoneId.systemDefault()): OffsetDateTime =
         atZone(zoneId).toOffsetDateTime()
 
-fun LocalDateTime.toZoned(zone: ZoneId = ZoneId.systemDefault()): ZonedDateTime = ZonedDateTime.of(this, zone)
+fun LocalDateTime.toZoned(zone: ZoneId = ZoneId.systemDefault()): ZonedDateTime = atZone(zone)
 fun LocalDateTime.toUtcZoned(): ZonedDateTime = toZoned(ZoneOffset.UTC)
-
-fun LocalDateTime.toCzechZoned(): ZonedDateTime = toZoned(czechZone)
 
 fun LocalDateTime.toTimestamp(): Timestamp = Timestamp(toDate().time)
 
