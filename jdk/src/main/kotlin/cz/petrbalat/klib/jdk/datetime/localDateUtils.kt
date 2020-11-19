@@ -24,12 +24,11 @@ fun LocalDateTime?.orMax(): LocalDateTime = this ?: LocalDateTime.MAX
 
 fun LocalDate.toDate(zoneId: ZoneId = ZoneId.systemDefault()): Date = atStartOfDay().toDate(zoneId)
 
-fun LocalDateTime.toDate(zoneId: ZoneId = ZoneId.systemDefault()): Date {
-    val instant = this.atZone(zoneId).toInstant()
-    return Date.from(instant)
-}
+fun LocalDateTime.toInstant(zoneId: ZoneId = ZoneId.systemDefault()) = this.atZone(zoneId).toInstant()
 
-fun ZoneId.toOffset() = Instant.now().atZone(this).offset
+fun LocalDateTime.toDate(zoneId: ZoneId = ZoneId.systemDefault()): Date = Date.from(toInstant())
+
+fun ZoneId.toOffset(): ZoneOffset = Instant.now().atZone(this).offset
 
 fun Date.toLocalDate(zoneId: ZoneId = ZoneId.systemDefault()): LocalDate = toLocalDateTime(zoneId).toLocalDate()
 
@@ -41,10 +40,11 @@ fun Date.toLocalDateTime(zoneId: ZoneId = ZoneId.systemDefault()): LocalDateTime
 fun LocalDateTime.toOffsetDateTime(zoneId: ZoneId = ZoneId.systemDefault()): OffsetDateTime =
         atZone(zoneId).toOffsetDateTime()
 
-fun LocalDateTime.toZoned(zone: ZoneId = ZoneId.systemDefault()): ZonedDateTime = atZone(zone)
-fun LocalDateTime.toUtcZoned(): ZonedDateTime = toZoned(ZoneOffset.UTC)
+fun LocalDateTime.toSystemZone(): ZonedDateTime = atZone(ZoneId.systemDefault())
+fun LocalDateTime.toUtcZone(): ZonedDateTime = atZone(ZoneOffset.UTC)
+fun ZonedDateTime.toUtcZone(): ZonedDateTime = withZoneSameInstant(ZoneOffset.UTC)
 
-fun LocalDateTime.toTimestamp(): Timestamp = Timestamp(toDate().time)
+fun LocalDateTime.toTimestamp(): Timestamp = Timestamp(toInstant().epochSecond)
 
 fun Long.toLocalDateTime(zoneId: ZoneId = ZoneId.systemDefault()): LocalDateTime {
     val instant = Instant.ofEpochMilli(this)
