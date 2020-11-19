@@ -44,9 +44,7 @@ fun LocalDateTime.toOffsetDateTime(zoneId: ZoneId = ZoneId.systemDefault()): Off
         atZone(zoneId).toOffsetDateTime()
 
 fun LocalDateTime.toZoned(zone: ZoneId = ZoneId.systemDefault()): ZonedDateTime = ZonedDateTime.of(this, zone)
-
-fun LocalDateTime.toZoned(zone: String = ZoneId.systemDefault().id): ZonedDateTime =
-        ZonedDateTime.of(this, ZoneId.of(zone))
+fun LocalDateTime.toUtcZoned(): ZonedDateTime = toZoned(ZoneOffset.UTC)
 
 fun LocalDateTime.toCzechZoned(): ZonedDateTime = toZoned(czechZone)
 
