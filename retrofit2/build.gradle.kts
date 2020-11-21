@@ -17,8 +17,7 @@ dependencies {
     implementation(kotlin("stdlib-jdk8"))
 //    implementation(kotlin("reflect"))
 
-    api("org.geolatte:geolatte-geom:1.4.0")
-    compileOnly("com.fasterxml.jackson.core:jackson-databind")
+    api("com.squareup.retrofit2:retrofit:2.9.0")
 
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
     testImplementation(kotlin("test-junit5"))
