@@ -18,14 +18,14 @@ repositories {
 plugins {
     id("org.springframework.boot") version "2.4.0" apply false
     id("io.spring.dependency-management") version "1.0.10.RELEASE" apply false
-    id("com.jfrog.bintray") version "1.8.5" apply false
+    id("com.jfrog.bintray") version "1.8.5" apply true
     kotlin("jvm") version "1.4.20" apply false
     kotlin("plugin.spring") version "1.4.20" apply false
 }
 
 allprojects {
     group = "com.github.petrbalat.klib"
-    version = "0.9.7"
+    version = "0.9.10"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
@@ -57,11 +57,28 @@ subprojects {
         plugin("maven-publish")
         plugin("com.jfrog.bintray")
     }
+
+    bintray {
+        val projectName = this@subprojects.name
+        user = System.getProperty("bintray.user")
+        key = System.getProperty("bintray.key")
+        publish = true
+        setPublications("mavenPublication")
+
+        pkg.apply {
+            repo = "klib"
+            this.name = projectName
+            userOrg = "petrbalat"
+            vcsUrl = "https://github.com/petrbalat/klib.git"
+            description = "Kotlin library"
+            setLabels("kotlin", "library", projectName)
+            setLicenses("MIT")
+            desc = description
+
+            version.apply {
+                this.name = projectName
+            }
+        }
+
+    }
 }
-//
-//configure(subprojects) {
-//
-//    dependencies {
-//
-//    }
-//}
