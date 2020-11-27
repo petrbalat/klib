@@ -75,6 +75,7 @@ class NatsStreamingListenerConfig(private val mapper: ObjectMapper)  {
                     logger.info("Stream listen in bean $name on method ${method.name}")
 
                     val options: SubscriptionOptions = SubscriptionOptions.Builder()
+                            //nastavení durable --  https://docs.nats.io/developing-with-nats-streaming/durables
                             .let {
                                 val durableName = annotation.durableName.takeIf { it.isNotBlank() }
                                 if (durableName != null) it.durableName(durableName)
@@ -96,7 +97,7 @@ class NatsStreamingListenerConfig(private val mapper: ObjectMapper)  {
 
                     logger.info("Stream subscribe on subject ${annotation.subject}")
                     connection.subscribe(annotation.subject, queue, { message ->
-                            method.invokeMessage(message, bean, mapper)
+                            method.invokeMessage(message, bean, mapper, logger)
                             if (annotation.manualAcks && annotation.autoAck) {
                                 message.ack()
                             }

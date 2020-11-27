@@ -54,7 +54,7 @@ class NatsListenerConfig(private val connection: Connection,
                     val subject: String = annotation.subject
                     val queue: String? = annotation.queue.takeIf { it.isNotBlank() }
                     val dispatcher: Dispatcher = connection.createDispatcher { message ->
-                        val result: Any? = method.invokeMessage(message, bean, mapper)
+                        val result: Any? = method.invokeMessage(message, bean, mapper, logger)
 
                         if (annotation.reply) {
                             val replyBody: ByteArray = mapper.writeValueAsBytes(result)

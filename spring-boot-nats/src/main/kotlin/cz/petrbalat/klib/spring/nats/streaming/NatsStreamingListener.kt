@@ -12,6 +12,7 @@ annotation class NatsStreamingListener(val subject: String,
 
                                        /**
                                         * if empty it wont be fill
+                                        * https://docs.nats.io/developing-with-nats-streaming/durables
                                         */
                                        val durableName: String,
                                        val startAt: StartPosition = StartPosition.LastReceived,

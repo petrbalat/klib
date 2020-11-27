@@ -25,7 +25,7 @@ plugins {
 
 allprojects {
     group = "com.github.petrbalat.klib"
-    version = "0.10.1"
+    version = "0.10.2"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
