@@ -40,6 +40,9 @@ class BigDecimalUtilTest {
 
         val stoZe5 = 20.toBigDecimal() howManyPercentOf 5.toBigDecimal()
         assertTrue(400.toBigDecimal() equalsTo stoZe5)
+
+        val test = 2_519.toBigDecimal() howManyPercentOf 4_199.toBigDecimal()
+        assertTrue(60.toBigDecimal() equalsTo test.roundHalfUp())
     }
 
     @Test
