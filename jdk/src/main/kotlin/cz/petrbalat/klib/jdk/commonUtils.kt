@@ -5,7 +5,7 @@ import java.util.*
 /**
  * Created by Petr Balat
  */
-fun Boolean.toBooleanInt(): Int = if(this) 1 else 0
+fun Boolean.toBooleanInt(): Int = if (this) 1 else 0
 
 fun Throwable.causeSequence(): Sequence<Throwable> = generateSequence(this, {
     if (it.cause == it) {
@@ -20,7 +20,15 @@ inline fun <T> tryOn(action: () -> T?): T? = try {
     null
 }
 
-infix fun Double.relativelyEqual(other:Double):Boolean = Math.abs(this - other) <= 1E-8
+/**
+ * porovnání čísel na 8 desetiných míst
+ */
+infix fun Double.relativelyEqual(other: Double): Boolean = this.relativelyEqual(other, 1E-8)
+
+/**
+ * porovnání čísel na decimalPlace desetiných míst
+ */
+fun Double.relativelyEqual(other: Double, decimalPlace: Double): Boolean = Math.abs(this - other) <= decimalPlace
 
 fun <T> Optional<T>.orNull(): T? = orElse(null)
 
