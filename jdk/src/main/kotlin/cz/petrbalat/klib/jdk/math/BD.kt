@@ -74,3 +74,7 @@ inline fun BigInteger.toBD(): BD = BD(this.toBigDecimal())
 inline fun BigDecimal.toBD(): BD = BD(this)
 inline fun String.toBD(): BD = BD(this.toBigDecimal())
 inline fun String.toBigDecimalExOrNull(): BD? = this.toBigDecimalOrNull()?.let { BD(it) }
+
+inline fun Iterable<BD>.sum(): BD = this.sumOf { it.value }.toBD()
+inline fun <T> Iterable<T>.sum(selector: (T) -> BD): BD = this.sumOf { selector(it).value }.toBD()
+
