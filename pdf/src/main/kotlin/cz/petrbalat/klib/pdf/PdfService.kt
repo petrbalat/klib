@@ -6,6 +6,7 @@ import org.xhtmlrenderer.pdf.ITextRenderer
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.OutputStream
+import java.net.URI
 
 /**
  * Pro konverzi html na pdf. A pro stažení volané z controlleru.
@@ -27,7 +28,7 @@ class PdfService(
      * @param baseUrl Název souboru pdf
      * @param htmlContent html k vygenerování
      */
-    fun response(fileName: String, baseUrl: String, htmlContent: String): ResponseEntity<ByteArray> {
+    fun response(fileName: String, baseUrl: URI, htmlContent: String): ResponseEntity<ByteArray> {
         val body: ByteArray = pdfAsByteArray(htmlContent, baseUrl)
         return ResponseEntity
             .ok()
@@ -40,17 +41,17 @@ class PdfService(
             .body(body)
     }
 
-    fun pdfAsByteArray(html: String, baseUrl: String): ByteArray = ByteArrayOutputStream().use {
+    fun pdfAsByteArray(html: String, baseUrl: URI): ByteArray = ByteArrayOutputStream().use {
         it.writePdf(html, baseUrl)
         it.toByteArray()
     }
 
-    private fun OutputStream.writePdf(html: String, baseUrl: String) {
+    private fun OutputStream.writePdf(html: String, baseUrl: URI) {
         val renderer = ITextRenderer().apply {
             // přidání písma kvůli české diakritice
             fontResolver.addFont(fontPath.absolutePath, BaseFont.IDENTITY_H, BaseFont.EMBEDDED)
             // generování
-            setDocumentFromString(html, baseUrl)
+            setDocumentFromString(html, baseUrl.toString())
             layout()
         }
         renderer.createPDF(this)

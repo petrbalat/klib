@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test
 
 import org.junit.jupiter.api.Assertions.*
 import java.io.File
+import java.net.URI
 import java.nio.file.Paths
 
 internal class PdfServiceTest {
@@ -15,13 +16,13 @@ internal class PdfServiceTest {
     @Test
     fun response() {
         val html = Paths.get("src/test/resources/html/test.html").toFile().readText()
-        val response = service.response("test.pdf", "/orders/test.pdf", htmlContent = html)
+        val response = service.response("test.pdf", URI("/orders/test.pdf"), htmlContent = html)
         assertNotNull(response)
     }
 
     @Test
     fun pdfAsByteArray() {
-        val response = service.pdfAsByteArray(html = html, "/test")
+        val response = service.pdfAsByteArray(html = html, URI("/orders/test.pdf"))
         assertNotNull(response)
     }
 }
