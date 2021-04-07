@@ -26,7 +26,28 @@ class ConcurrentUtilsTest {
         }
         assertEquals(false, lock.get())
         assertEquals(1, counter)
+    }
 
+    @Test
+    fun runAtomicAndResult() {
+        var counter = 0
 
+        //nespustí se
+        val lock = AtomicBoolean(true)
+        var result = runAtomic<Int>(lock) {
+            counter++
+        }
+        assertEquals(true, lock.get())
+        assertEquals(0, counter)
+
+        //spustí
+        lock.set(false)
+        result = runAtomic<Int>(lock) {
+            counter++
+            assertEquals(true, lock.get())
+            counter
+        }
+        assertEquals(false, lock.get())
+        assertEquals(result, counter)
     }
 }

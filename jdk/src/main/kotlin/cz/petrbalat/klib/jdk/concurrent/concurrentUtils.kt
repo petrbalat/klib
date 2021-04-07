@@ -15,10 +15,16 @@ inline fun runAtomic(lock: AtomicBoolean, action: () -> Unit) {
     }
 }
 
-inline fun <T> runAtomic(lock: AtomicBoolean, action: () -> T): T? = if (lock.compareAndSet(false, true)) {
-    try {
-        action()
-    } finally {
-        lock.set(false)
+inline fun <T> runAtomic(lock: AtomicBoolean, action: () -> T): T? {
+    if (lock.compareAndSet(false, true)) {
+        try {
+            val result = action()
+            lock.set(false)
+            return result
+        } finally {
+            lock.set(false)
+        }
     }
-} else null
+
+    return null
+}
