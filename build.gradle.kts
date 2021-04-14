@@ -19,13 +19,13 @@ plugins {
     id("org.springframework.boot") version "2.4.4" apply false
     id("io.spring.dependency-management") version "1.0.11.RELEASE" apply false
     id("com.jfrog.bintray") version "1.8.5" apply true
-    kotlin("jvm") version "1.4.31" apply false
-    kotlin("plugin.spring") version "1.4.31" apply false
+    kotlin("jvm") version "1.5.0-RC" apply false
+    kotlin("plugin.spring") version "1.5.0-RC" apply false
 }
 
 allprojects {
     group = "com.github.petrbalat.klib"
-    version = "0.2.4"
+    version = "0.3.0"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
