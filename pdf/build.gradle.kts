@@ -5,6 +5,8 @@ plugins {
 
 tasks.getByName<Jar>("jar") {
     enabled = true
+    val name = archiveFileName.get().replace("-plan", "")
+    archiveFileName.set(name)
 }
 tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
     enabled = false

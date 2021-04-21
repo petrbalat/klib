@@ -9,6 +9,8 @@ plugins {
 
 tasks.getByName<Jar>("jar") {
 	enabled = true
+	val name = archiveFileName.get().replace("-plan", "")
+	archiveFileName.set(name)
 }
 tasks.getByName<BootJar>("bootJar") {
 	enabled = false

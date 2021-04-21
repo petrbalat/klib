@@ -3,20 +3,18 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
     repositories {
-        jcenter()
         mavenCentral()
         maven { url = uri("https://repo.spring.io/milestone") }
     }
 }
 
 repositories {
-    jcenter()
     mavenCentral()
     maven { url = uri("https://repo.spring.io/milestone") }
 }
 
 plugins {
-    id("org.springframework.boot") version "2.4.5" apply false
+    id("org.springframework.boot") version "2.5.0-RC1" apply false
     id("io.spring.dependency-management") version "1.0.11.RELEASE" apply false
     id("com.jfrog.bintray") version "1.8.5" apply true
     kotlin("jvm") version "1.5.0-RC" apply false
@@ -25,7 +23,7 @@ plugins {
 
 allprojects {
     group = "com.github.petrbalat.klib"
-    version = "0.3.1"
+    version = "1.0.0-RC4"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
@@ -81,7 +79,7 @@ subprojects {
             desc = description
 
             version.apply {
-                this.name = projectName
+                this.name = projectName.removeSuffix("-plain")
             }
         }
 
