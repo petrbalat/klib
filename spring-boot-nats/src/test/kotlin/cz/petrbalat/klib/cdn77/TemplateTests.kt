@@ -1,4 +1,4 @@
-package cz.petrbalat.klib.nats
+package cz.petrbalat.klib.cdn77
 
 import cz.petrbalat.klib.spring.nats.NatsTemplate
 import org.springframework.beans.factory.annotation.Autowired

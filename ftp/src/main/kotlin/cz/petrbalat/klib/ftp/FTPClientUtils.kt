@@ -1,6 +1,7 @@
 package cz.petrbalat.klib.ftp
 
 import cz.petrbalat.klib.jdk.tryOrNull
+import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPReply
 import org.slf4j.Logger
@@ -16,13 +17,16 @@ private inline fun <T> FTPClient.useConnection(block: (FTPClient) -> Unit): T? =
 
 fun <T> FTPClient.use(
     logger: Logger,
-    hostname: String, user:
-    String, password: String,
+
+    hostname: String,
+    user: String,
+    password: String,
 
     defaultTimeout: Long? = TimeUnit.SECONDS.toMillis(5),
     dataTimeout: Long? = TimeUnit.MINUTES.toMillis(2),
 
     passive: Boolean = true,
+    type: Int = FTP.BINARY_FILE_TYPE,
 
     block: (FTPClient) -> T?
 ): T? = useConnection<T> { ftpClient ->
@@ -39,12 +43,14 @@ fun <T> FTPClient.use(
         ftpClient.setDataTimeout(dataTimeout.toInt())
     }
 
+    ftpClient.setFileType(type)
+
     val replyCode: Int = ftpClient.replyCode
     if (!FTPReply.isPositiveCompletion(replyCode)) {
-        logger.error("Chyba při připojení. Code $replyCode")
+        logger.error("Connection fail Code $replyCode")
         return use@ null
     }
-    logger.debug("Připojení bylo úspěšné")
+    logger.debug("Connection was successful")
 
     return block(this) as T
 }

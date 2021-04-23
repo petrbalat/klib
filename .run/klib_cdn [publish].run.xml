@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="klib:ftp [publish]" type="GradleRunConfiguration" factoryName="Gradle">
+  <configuration default="false" name="klib:image [publish]" type="GradleRunConfiguration" factoryName="Gradle">
     <ExternalSystemSettings>
       <option name="executionName" />
-      <option name="externalProjectPath" value="$PROJECT_DIR$/ftp" />
+      <option name="externalProjectPath" value="$PROJECT_DIR$/spring-boot-image" />
       <option name="externalSystemIdString" value="GRADLE" />
       <option name="scriptParameters" value="" />
       <option name="taskDescriptions">

@@ -1,4 +1,4 @@
-package cz.petrbalat.klib.nats
+package cz.petrbalat.klib.cdn77
 
 import cz.petrbalat.klib.spring.nats.NatsComponent
 import cz.petrbalat.klib.spring.nats.streaming.NatsStreamingListener

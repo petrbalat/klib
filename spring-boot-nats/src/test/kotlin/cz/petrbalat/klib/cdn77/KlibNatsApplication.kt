@@ -1,4 +1,4 @@
-package cz.petrbalat.klib.nats
+package cz.petrbalat.klib.cdn77
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 
