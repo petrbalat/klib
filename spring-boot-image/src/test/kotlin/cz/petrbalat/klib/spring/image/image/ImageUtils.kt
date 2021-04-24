@@ -1,7 +1,6 @@
 package cz.petrbalat.klib.spring.image.image
 
 import cz.petrbalat.klib.cdn77.testJpgFile
-import cz.petrbalat.klib.jdk.http.fetchStream
 import kotlinx.coroutines.runBlocking
 import java.awt.image.BufferedImage
 import java.io.File
@@ -20,8 +19,7 @@ class ImageUtils {
 
     @Test
     fun testUriReadImage() = runBlocking {
-        val uri = testJpgFile.toURI()
-        val dto = uri.fetchStream().readImageDto(uri)
+        val dto = testJpgFile.inputStream().readImageDto(testJpgFile.name)
         assertEquals("test.jpg", dto.name)
     }
 

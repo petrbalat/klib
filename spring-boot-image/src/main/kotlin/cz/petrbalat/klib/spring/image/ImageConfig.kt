@@ -15,14 +15,15 @@ import kotlin.io.path.Path
 @kotlin.ExperimentalStdlibApi
 class ImageConfig(
     @Value("\${klib.image.host}") private val host: String,
+    @Value("\${klib.image.baseUrl}") private val baseUrl: String,
+
     @Value("\${klib.image.user}") private val user: String?,
     @Value("\${klib.image.password}") private val password: String?,
-    @Value("\${klib.image.baseUrl}") private val baseUrl: String,
 ) {
 
     @Bean
     fun template(): ImageService {
-        if (user == null || password == null) {
+        if (user.isNullOrBlank() || password.isNullOrBlank()) {
             val path = Path(host)
             return FileSystemImageService(path, baseUrl = baseUrl)
         }

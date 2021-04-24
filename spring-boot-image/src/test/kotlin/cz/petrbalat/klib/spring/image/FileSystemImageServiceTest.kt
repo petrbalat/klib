@@ -1,9 +1,10 @@
 package cz.petrbalat.klib.spring.image
 
 import cz.petrbalat.klib.cdn77.testJpg
+import cz.petrbalat.klib.jdk.http.fetchStream
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Test
 import kotlin.io.path.Path
+import kotlin.test.Test
 import kotlin.test.assertEquals
 
 internal class FileSystemImageServiceTest {
@@ -18,5 +19,11 @@ internal class FileSystemImageServiceTest {
         assertEquals("/resources/test/test.jpg", imageDto.url)
         assertEquals("test.webp", imageDto.webpName)
         assertEquals("/resources/test/test.webp", imageDto.webpUrl)
+    }
+
+    @Test
+    fun testUpload() = runBlocking {
+        val url: String = service.upload(testJpg.fetchStream(), name = "tupload.jpg", directory = "test")
+        assertEquals("/resources/test/tupload.jpg", url)
     }
 }

@@ -1,6 +1,5 @@
 package cz.petrbalat.klib.spring.image
 
-import cz.petrbalat.klib.jdk.http.fetchStream
 import cz.petrbalat.klib.jdk.tryOrNull
 import cz.petrbalat.klib.spring.image.cwebp.convertToWebP
 import cz.petrbalat.klib.spring.image.image.ReadImageDto
@@ -9,7 +8,7 @@ import cz.petrbalat.klib.spring.image.image.resizeImageIfGreaterThan
 import cz.petrbalat.klib.spring.image.image.writeToStream
 import org.imgscalr.Scalr
 import java.io.ByteArrayInputStream
-import java.net.URI
+import java.io.InputStream
 import java.nio.file.Path
 import kotlin.io.path.*
 
@@ -19,14 +18,15 @@ class FileSystemImageService(
 ) : ImageService {
 
     override suspend fun uploadImage(
-        uri: URI,
+        stream: InputStream,
+        name: String,
         directory: String,
         override: Boolean,
         maxPx: Int,
-        mode: Scalr.Mode,
+        mode: Scalr.Mode
     ): ImageDto {
-        val bytes = uri.fetchStream().readBytes()
-        val dto: ReadImageDto = ByteArrayInputStream(bytes).readImageDto(uri)
+        val bytes = stream.readBytes()
+        val dto: ReadImageDto = ByteArrayInputStream(bytes).readImageDto(name)
 
         val destination: Path = createDestinationDirIfNotExist(directory)
         val file: Path = destination / dto.name
@@ -56,6 +56,19 @@ class FileSystemImageService(
 
         val baseUrl = "$baseUrl/$directory"
         return ImageDto("$baseUrl/${dto.name}", webpUrl = "$baseUrl/${webpFile.name}")
+    }
+
+    override suspend fun upload(stream: InputStream, name: String, directory: String, override: Boolean): String {
+        val destination: Path = createDestinationDirIfNotExist(directory)
+        val file: Path = destination / name
+
+        stream.use { input ->
+            file.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+
+        return "$baseUrl/$directory/$name"
     }
 
     private fun createDestinationDirIfNotExist(directory: String): Path  {

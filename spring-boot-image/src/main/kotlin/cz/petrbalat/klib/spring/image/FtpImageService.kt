@@ -1,7 +1,6 @@
 package cz.petrbalat.klib.spring.image
 
 import cz.petrbalat.klib.ftp.use
-import cz.petrbalat.klib.jdk.http.fetchStream
 import cz.petrbalat.klib.jdk.tryOrNull
 import cz.petrbalat.klib.spring.image.cwebp.convertToWebP
 import cz.petrbalat.klib.spring.image.image.ReadImageDto
@@ -13,7 +12,7 @@ import org.imgscalr.Scalr
 import org.slf4j.LoggerFactory
 import java.awt.image.BufferedImage
 import java.io.ByteArrayInputStream
-import java.net.URI
+import java.io.InputStream
 
 class FtpImageService(
     private val host: String,
@@ -25,14 +24,15 @@ class FtpImageService(
     private val logger = LoggerFactory.getLogger(javaClass)
 
     override suspend fun uploadImage(
-        uri: URI,
+        stream: InputStream,
+        name: String,
         directory: String,
         override: Boolean,
         maxPx: Int,
-        mode: Scalr.Mode,
+        mode: Scalr.Mode
     ): ImageDto {
-        val bytes = uri.fetchStream().readBytes()
-        val dto: ReadImageDto = ByteArrayInputStream(bytes).readImageDto(uri)
+        val bytes = stream.readBytes()
+        val dto: ReadImageDto = ByteArrayInputStream(bytes).readImageDto(name)
 
         val fileName = dto.name
         val webFileName = "${dto.nameWithoutExtension}.webp"
@@ -65,6 +65,27 @@ class FtpImageService(
 
         val baseUrl = "$baseUrl/$directory"
         return ImageDto("$baseUrl/$fileName", webpUrl = "$baseUrl/$webFileName")
+    }
+
+    override suspend fun upload(stream: InputStream, name: String, directory: String, override: Boolean): String {
+        useFtpClient { client ->
+            logger.info("makeDirectory ${client.makeDirectory(directory)}")
+
+            val dir = client.changeWorkingDirectory(directory)
+            logger.info("Change directory $directory $dir")
+
+            if (override) {
+                tryOrNull {
+                    client.deleteFile(name)
+                }
+            }
+
+            stream.use {
+                client.storeFile(name, it)
+            }
+        }
+
+        return "$baseUrl/$directory/$name"
     }
 
     private fun useFtpClient(block: (FTPClient) -> Unit) {

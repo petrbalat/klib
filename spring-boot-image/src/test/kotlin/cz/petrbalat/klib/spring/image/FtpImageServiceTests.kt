@@ -1,6 +1,7 @@
 package cz.petrbalat.klib.spring.image
 
 import cz.petrbalat.klib.cdn77.testJpg
+import cz.petrbalat.klib.jdk.http.fetchStream
 import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -21,6 +22,13 @@ class FtpImageServiceTests {
         assertEquals("https://cdn.easyrent.cz/test/test.jpg", imageDto.url)
         assertEquals("test.webp", imageDto.webpName)
         assertEquals("https://cdn.easyrent.cz/test/test.webp", imageDto.webpUrl)
+    }
+
+
+    @Test
+    fun testUpload() = runBlocking {
+        val url: String = service.upload(testJpg.fetchStream(), name = "tupload.jpg", directory = "test")
+        assertEquals("https://cdn.easyrent.cz/test/tupload.jpg", url)
     }
 
 
