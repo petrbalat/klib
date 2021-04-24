@@ -8,6 +8,7 @@ import com.google.zxing.common.CharacterSetECI
 import com.google.zxing.qrcode.QRCodeWriter
 import cz.petrbalat.klib.jdk.io.mkdirIfNotExist
 import cz.petrbalat.klib.jdk.string.removeNotAlowedInFileName
+import java.io.OutputStream
 import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.exists
@@ -29,15 +30,33 @@ class QRService {
         directory.toFile().mkdirIfNotExist()
         assert(directory.exists() && directory.isDirectory())
 
-        val encode = mapOf(EncodeHintType.CHARACTER_SET to CharacterSetECI.UTF8)
-        val qrCodeWriter = QRCodeWriter()
-        val bitMatrix: BitMatrix = qrCodeWriter.encode(data, BarcodeFormat.QR_CODE, width, height, encode)
+        val bitMatrix: BitMatrix = bitMatrix(data, width, height)
 
         //do názvu přidám hash + random kvůli přegenerování a cache obrázků
         val fileName: String = removeNotAlowedInFileName(fileName)
         val path: Path = directory.resolve("$fileName.jpg")
         MatrixToImageWriter.writeToPath(bitMatrix, "JPG", path)
         return path
+    }
+
+    /**
+     * vygeneruje jpg
+     */
+    @OptIn(ExperimentalPathApi::class)
+    fun generateQrImage(
+        data: String,
+        width: Int = 640, height: Int = 480,
+        outputStream: OutputStream,
+    ) {
+        val bitMatrix: BitMatrix = bitMatrix(data, width, height)
+        //do názvu přidám hash + random kvůli přegenerování a cache obrázků
+        MatrixToImageWriter.writeToStream(bitMatrix, "JPG", outputStream)
+    }
+
+    private fun bitMatrix(data: String, width: Int, height: Int): BitMatrix {
+        val encode = mapOf(EncodeHintType.CHARACTER_SET to CharacterSetECI.UTF8)
+        val qrCodeWriter = QRCodeWriter()
+        return qrCodeWriter.encode(data, BarcodeFormat.QR_CODE, width, height, encode)
     }
 
 }
