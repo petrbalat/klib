@@ -74,7 +74,7 @@ class FileSystemImageService(
     private fun createDestinationDirIfNotExist(directory: String): Path  {
         val destination: Path = path / directory
         if (!destination.exists()) {
-            destination.createDirectory()
+            destination.createDirectories()
         }
         return destination
     }

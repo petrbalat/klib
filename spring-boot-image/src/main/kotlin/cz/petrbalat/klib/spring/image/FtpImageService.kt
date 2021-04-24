@@ -69,10 +69,12 @@ class FtpImageService(
 
     override suspend fun upload(stream: InputStream, name: String, directory: String, override: Boolean): String {
         useFtpClient { client ->
-            logger.info("makeDirectory ${client.makeDirectory(directory)}")
+            directory.split("/").forEach { dir ->
+                logger.info("makeDirectory ${client.makeDirectory(dir)}")
 
-            val dir = client.changeWorkingDirectory(directory)
-            logger.info("Change directory $directory $dir")
+                val changeDir = client.changeWorkingDirectory(dir)
+                logger.info("Change directory $dir $changeDir")
+            }
 
             if (override) {
                 tryOrNull {
