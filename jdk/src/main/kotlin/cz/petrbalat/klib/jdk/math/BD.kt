@@ -9,7 +9,8 @@ import java.math.BigInteger
  * wrapper over BigDecimal with operator +->< and mainly equalsTo method
  *
  */
-inline class BD(val value: BigDecimal) : Comparable<BD> {
+@JvmInline
+value class BD(val value: BigDecimal) : Comparable<BD> {
 
     override fun compareTo(other: BD): Int = value.compareTo(other.value)
 
