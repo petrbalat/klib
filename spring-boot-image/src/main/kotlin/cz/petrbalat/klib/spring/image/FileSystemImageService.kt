@@ -14,7 +14,7 @@ import kotlin.io.path.*
 
 class FileSystemImageService(
     private val path: Path,
-    private val baseUrl: String,
+    override val baseUrl: String,
 ) : ImageService {
 
     override suspend fun uploadImage(

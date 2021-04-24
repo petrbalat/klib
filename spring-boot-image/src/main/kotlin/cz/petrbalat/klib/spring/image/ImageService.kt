@@ -8,6 +8,8 @@ import java.net.URI
 
 interface ImageService {
 
+    val baseUrl: String
+
     suspend fun uploadImage(
         uri: URI, // uri of image. can by http(s):// or file:/
         directory: String,// destination directory

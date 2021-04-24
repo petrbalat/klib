@@ -18,7 +18,7 @@ class FtpImageService(
     private val host: String,
     private val user: String,
     private val password: String,
-    private val baseUrl: String,
+    override val baseUrl: String,
 ) : ImageService {
 
     private val logger = LoggerFactory.getLogger(javaClass)
