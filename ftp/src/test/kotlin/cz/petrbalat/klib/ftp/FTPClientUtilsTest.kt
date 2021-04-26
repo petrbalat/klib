@@ -1,5 +1,6 @@
 package cz.petrbalat.klib.ftp
 
+import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
 import org.slf4j.LoggerFactory
 import kotlin.test.Test
@@ -11,7 +12,7 @@ class FTPClientUtilsTest {
 
     @Test
     fun testUse() {
-        val names = FTPClient().use(logger, hostname = "push-x.cdn77.com", user = "user_x", password = "xxx") {
+        val names = FTPClient().use(logger, hostname = "push-x.cdn77.com", user = "user_x", password = "xxx", fileType = FTP.BINARY_FILE_TYPE) {
             it.changeWorkingDirectory("/www")
             it.listNames()
         }.orEmpty()

@@ -7,6 +7,7 @@ import cz.petrbalat.klib.spring.image.image.ReadImageDto
 import cz.petrbalat.klib.spring.image.image.readImageDto
 import cz.petrbalat.klib.spring.image.image.resizeImageIfGreaterThan
 import cz.petrbalat.klib.spring.image.image.toByteArray
+import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
 import org.imgscalr.Scalr
 import org.slf4j.LoggerFactory
@@ -91,7 +92,7 @@ class FtpImageService(
     }
 
     private fun useFtpClient(block: (FTPClient) -> Unit) {
-        FTPClient().use(logger, hostname = host, user = user, password = password) {
+        FTPClient().use(logger, hostname = host, user = user, password = password, fileType = FTP.BINARY_FILE_TYPE) {
             it.changeWorkingDirectory("www")
             block(it)
         }

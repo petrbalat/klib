@@ -1,7 +1,6 @@
 package cz.petrbalat.klib.ftp
 
 import cz.petrbalat.klib.jdk.tryOrNull
-import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPReply
 import org.slf4j.Logger
@@ -26,7 +25,7 @@ fun <T> FTPClient.use(
     dataTimeout: Long? = TimeUnit.MINUTES.toMillis(2),
 
     passive: Boolean = true,
-    type: Int = FTP.BINARY_FILE_TYPE,
+    fileType: Int? = null,
 
     block: (FTPClient) -> T?
 ): T? = useConnection<T> { ftpClient ->
@@ -43,7 +42,9 @@ fun <T> FTPClient.use(
         ftpClient.setDataTimeout(dataTimeout.toInt())
     }
 
-    ftpClient.setFileType(type)
+    if (fileType != null) {
+        ftpClient.setFileType(fileType)
+    }
 
     val replyCode: Int = ftpClient.replyCode
     if (!FTPReply.isPositiveCompletion(replyCode)) {
