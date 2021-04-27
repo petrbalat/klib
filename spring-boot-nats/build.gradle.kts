@@ -17,7 +17,7 @@ tasks.getByName<BootJar>("bootJar") {
 dependencies {
 	implementation(kotlin("stdlib-jdk8"))
 //	compileOnly(kotlin("kotlin-reflect"))
-	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
+	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
 
 	implementation("org.springframework.boot:spring-boot-starter")
 
