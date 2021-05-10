@@ -29,7 +29,22 @@ dependencies {
     testImplementation(kotlin("test-junit5"))
 }
 
+val sourcesJar by tasks.registering(Jar::class) {
+    classifier = "sources"
+    from(sourceSets.main.get().allSource)
+}
+
 publishing {
+    publications {
+        register("mavenJava", MavenPublication::class) {
+            from(components["java"])
+            artifact(sourcesJar.get())
+        }
+    }
+
     publishingKlib(this)
 }
 
+signing {
+    sign(publishing.publications["mavenJava"])
+}

@@ -1,12 +1,8 @@
-
 import org.gradle.api.Project
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.jvm.tasks.Jar
-import org.gradle.kotlin.dsl.create
-import org.gradle.kotlin.dsl.creating
-import org.gradle.kotlin.dsl.get
-import org.gradle.kotlin.dsl.getValue
+import org.gradle.kotlin.dsl.*
 
 private val Project.`sourceSets`: org.gradle.api.tasks.SourceSetContainer
     get() =
@@ -14,6 +10,20 @@ private val Project.`sourceSets`: org.gradle.api.tasks.SourceSetContainer
 
 fun Project.publishingKlib(pe: PublishingExtension) {
     with(pe) {
+        repositories {
+            maven {
+                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+//            url =  uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+                val ossrhUsername: String? by project
+                val ossrhPassword: String? by project
+                credentials {
+                    username = ossrhUsername ?: "Unknown user"
+                    password = ossrhPassword ?: "Unknown password"
+                }
+            }
+        }
+        if (1 == 1) return@with
+
         publications {
             create<MavenPublication>("mavenPublication") {
 

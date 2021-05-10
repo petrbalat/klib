@@ -18,14 +18,13 @@ repositories {
 plugins {
     id("org.springframework.boot") version "2.4.5" apply false
     id("io.spring.dependency-management") version "1.0.11.RELEASE" apply false
-    id("com.jfrog.bintray") version "1.8.5" apply true
     kotlin("jvm") version "1.5.0" apply false
     kotlin("plugin.spring") version "1.5.0" apply false
 }
 
 allprojects {
-    group = "com.github.petrbalat.klib"
-    version = "0.3.16"
+    group = "io.github.petrbalat"
+    version = "0.4.1"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
@@ -55,35 +54,6 @@ subprojects {
     apply {
         plugin("io.spring.dependency-management")
         plugin("maven-publish")
-        plugin("com.jfrog.bintray")
-    }
-
-    bintray {
-        val localProperties = File(rootDir, "local.properties").inputStream().use {
-            java.util.Properties().apply {
-                load(it)
-            }
-        }
-        user = localProperties.getProperty("bintray.user")
-        key = localProperties.getProperty("bintray.key")
-        publish = true
-        setPublications("mavenPublication")
-
-        val projectName = this@subprojects.name
-        pkg.apply {
-            repo = "klib"
-            this.name = projectName
-            userOrg = "petrbalat"
-            vcsUrl = "https://github.com/petrbalat/klib.git"
-            description = "Kotlin library"
-            setLabels("kotlin", "library", projectName)
-            setLicenses("MIT")
-            desc = description
-
-            version.apply {
-                this.name = projectName
-            }
-        }
-
+        plugin("signing")
     }
 }
