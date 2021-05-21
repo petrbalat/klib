@@ -50,6 +50,6 @@ publishing {
 	publishingKlib(this)
 }
 
-signing {
-	sign(publishing.publications["mavenJava"])
-}
+//signing {
+//	sign(publishing.publications["mavenJava"])
+//}
