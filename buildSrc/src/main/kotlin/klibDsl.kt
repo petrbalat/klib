@@ -12,8 +12,9 @@ fun Project.publishingKlib(pe: PublishingExtension) {
     with(pe) {
         repositories {
             maven {
-                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-//            url =  uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+                // FIXME sign
+//                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+                    url =  uri("https://maven.pkg.jetbrains.space/lp/p/lplib/maven")
                 val ossrhUsername: String? by project
                 val ossrhPassword: String? by project
                 credentials {
