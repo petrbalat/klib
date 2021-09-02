@@ -52,7 +52,9 @@ class FileSystemImageService(
         }
 
         //write webp
-        dto.image.convertToWebP(webpFile.outputStream())
+        webpFile.outputStream().use {
+            dto.image.convertToWebP(it)
+        }
 
         val baseUrl = "$baseUrl/$directory"
         return ImageDto("$baseUrl/${dto.name}", webpUrl = "$baseUrl/${webpFile.name}")
@@ -69,6 +71,32 @@ class FileSystemImageService(
         }
 
         return "$baseUrl/$directory/$name"
+    }
+
+    override suspend fun toWebpAndUploadImage(
+        stream: InputStream,
+        name: String, // file name
+        directory: String, // destination directory
+        override: Boolean,  //override destination files
+    ): String {
+        val dto: ReadImageDto = stream.readImageDto(name)
+
+        val destination: Path = createDestinationDirIfNotExist(directory)
+        val webpFile: Path = destination / "${dto.nameWithoutExtension}.webp"
+
+        if (override) {
+            tryOrNull {
+                webpFile.deleteIfExists()
+            }
+        }
+
+        //write webp
+        webpFile.outputStream().use {
+            dto.image.convertToWebP(it)
+        }
+
+
+        return  "$baseUrl/$directory/${dto.nameWithoutExtension}.webp"
     }
 
     private fun createDestinationDirIfNotExist(directory: String): Path  {

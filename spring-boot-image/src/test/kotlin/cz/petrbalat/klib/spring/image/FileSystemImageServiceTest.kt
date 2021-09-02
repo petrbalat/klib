@@ -22,6 +22,13 @@ internal class FileSystemImageServiceTest {
     }
 
     @Test
+    fun toWebpAndUploadImage() = runBlocking {
+        val url = service.toWebpAndUploadImage(testJpg.fetchStream(), "test.jpg", "test-dir")
+
+        assertEquals("/resources/test-dir/test.webp", url)
+    }
+
+    @Test
     fun testUpload() = runBlocking {
         val url: String = service.upload(testJpg.fetchStream(), name = "tupload.jpg", directory = "test")
         assertEquals("/resources/test/tupload.jpg", url)

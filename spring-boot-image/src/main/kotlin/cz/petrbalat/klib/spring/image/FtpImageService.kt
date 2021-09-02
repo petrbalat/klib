@@ -44,12 +44,7 @@ class FtpImageService(
         val webpByteArray = dto.image.convertToWebP()
 
         // upload origin
-        useFtpClient { client ->
-            logger.info("makeDirectory ${client.makeDirectory(directory)}")
-
-            val dir = client.changeWorkingDirectory(directory)
-            logger.info("Change directory $directory $dir")
-
+        useFtpClient(directory) { client ->
             if (override) {
                 tryOrNull {
                     client.deleteFile(fileName)
@@ -69,7 +64,7 @@ class FtpImageService(
     }
 
     override suspend fun upload(stream: InputStream, name: String, directory: String, override: Boolean): String {
-        useFtpClient { client ->
+        useFtpClient(directory) { client ->
             directory.split("/").forEach { dir ->
                 logger.info("makeDirectory ${client.makeDirectory(dir)}")
 
@@ -91,9 +86,44 @@ class FtpImageService(
         return "$baseUrl/$directory/$name"
     }
 
-    private fun useFtpClient(block: (FTPClient) -> Unit) {
+    override suspend fun toWebpAndUploadImage(
+        stream: InputStream,
+        name: String,
+        directory: String,
+        override: Boolean
+    ): String {
+        val dto: ReadImageDto = stream.readImageDto(name)
+
+        val webFileName = "${dto.nameWithoutExtension}.webp"
+
+        //convert to webp
+        val webpByteArray = dto.image.convertToWebP()
+
+        // upload origin
+        useFtpClient(directory) { client ->
+            if (override) {
+                tryOrNull {
+                    client.deleteFile(webFileName)
+                }
+            }
+
+            //upload origin image
+            client.storeFile(webFileName, ByteArrayInputStream(webpByteArray))
+        }
+
+        return upload(stream, name, directory, override)
+    }
+
+    private fun useFtpClient(directory: String? = null, block: (FTPClient) -> Unit) {
         FTPClient().use(logger, hostname = host, user = user, password = password, fileType = FTP.BINARY_FILE_TYPE) {
             it.changeWorkingDirectory("www")
+
+            if (directory != null) {
+                logger.info("makeDirectory ${it.makeDirectory(directory)}")
+                val dir = it.changeWorkingDirectory(directory)
+                logger.info("Change directory $directory $dir")
+            }
+
             block(it)
         }
     }
