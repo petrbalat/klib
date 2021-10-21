@@ -15,6 +15,7 @@ fun Project.publishingKlib(pe: PublishingExtension) {
                 // FIXME sign
 //                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                     url =  uri("https://maven.pkg.jetbrains.space/lp/p/lplib/maven")
+                //in gradle.properties set ossrhUsername an ossrhPassword=
                 val ossrhUsername: String? by project
                 val ossrhPassword: String? by project
                 credentials {
