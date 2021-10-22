@@ -5,18 +5,16 @@ buildscript {
     repositories {
         jcenter()
         mavenCentral()
-//        maven { url = uri("https://repo.spring.io/milestone") }
     }
 }
 
 repositories {
     jcenter()
     mavenCentral()
-//    maven { url = uri("https://repo.spring.io/milestone") }
 }
 
 plugins {
-    id("org.springframework.boot") version "2.5.6" apply false
+    id("org.springframework.boot") version "2.6.0-RC1" apply false
     id("io.spring.dependency-management") version "1.0.11.RELEASE" apply false
     kotlin("jvm") version "1.6.0-RC" apply false
     kotlin("plugin.spring") version "1.6.0-RC" apply false
@@ -24,7 +22,7 @@ plugins {
 
 allprojects {
     group = "io.github.petrbalat"
-    version = "0.7.2"
+    version = "0.8.0"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
@@ -48,7 +46,7 @@ subprojects {
     repositories {
         jcenter()
         mavenCentral()
-//        maven { url = uri("https://repo.spring.io/milestone") }
+        maven { url = uri("https://repo.spring.io/milestone") }
     }
 
     apply {
