@@ -22,7 +22,7 @@ plugins {
 
 allprojects {
     group = "io.github.petrbalat"
-    version = "0.9.2"
+    version = "0.9.3"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"

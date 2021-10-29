@@ -27,7 +27,7 @@ val regexpNotAlowedInFileName by lazy {
     Regex("[^a-zA-Z0-9æøåÆØÅ_. -]")
 }
 
-fun removeNotAlowedInFileName(fileName: String, replacement: String = ""): String = fileName.replace(regexpNotAlowedInFileName, replacement)
+fun removeNotAlowedInFileName(fileName: String, replacement: String = ""): String = fileName.replace(regexpNotAlowedInFileName, replacement).replace(" ", "")
 
 fun String?.emptyToNull(): String? = if (this.isNullOrEmpty()) null else this
 fun String?.blankToNull(): String? = if (this.isNullOrBlank()) null else this

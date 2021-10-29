@@ -13,7 +13,7 @@ internal class FileSystemImageServiceTest {
 
     @Test
     fun uploadImage() = runBlocking {
-        val imageDto: ImageDto = service.uploadImage(testJpg, "test")
+        val imageDto: ImageDto = service.uploadImage(testJpg, "test", "Test %/*.jpg")
 
         assertEquals("test.jpg", imageDto.name)
         assertEquals("/resources/test/test.jpg", imageDto.url)

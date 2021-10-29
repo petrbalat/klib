@@ -1,5 +1,7 @@
 package cz.petrbalat.klib.spring.image.image
 
+import cz.petrbalat.klib.jdk.string.removeDiakritiku
+import cz.petrbalat.klib.jdk.string.removeNotAlowedInFileName
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.InputStream
@@ -8,9 +10,9 @@ import javax.imageio.ImageIO
 /**
  * donwload image form uri and transform to BufferedImage
  */
-fun InputStream.readImageDto(name: String) = use { stream ->
+fun InputStream.readImageDto(name: String): ReadImageDto = use { stream ->
     val image: BufferedImage = stream.readImage()
-    val nameWithoutExtension = name.substringBeforeLast(".")
+    val nameWithoutExtension = removeNotAlowedInFileName(name.substringBeforeLast(".").lowercase()).removeDiakritiku()
     val extension = name.substringAfterLast(".")
     ReadImageDto(nameWithoutExtension = nameWithoutExtension, extension = extension, image)
 }
