@@ -2,15 +2,12 @@ package cz.petrbalat.klib.jdk.datetime
 
 import java.time.format.DateTimeFormatter
 
+val ddMMyyyy = DateTimeFormatter.ofPattern("d.M.yyyy")
+
 /**
  * yyyyMMddHHmmss
  */
 val yyyyMMddHHmmss = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
-
-/**
- * "yyyyMMdd_HHmmss"
- */
-val yyyyMMdd_HHmmss = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
 
 /**
  * "d.M.yyyy HH:mm"
