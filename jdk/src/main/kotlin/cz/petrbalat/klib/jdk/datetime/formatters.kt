@@ -7,8 +7,6 @@ val ddMMyyyy = DateTimeFormatter.ofPattern("d.M.yyyy")
 /**
  * yyyyMMddHHmmss
  */
-val yyyyMMddHHmmss = DateTimeFormatter.ofPattern("yyyyMMddHHmmss")
-
 /**
  * "d.M.yyyy HH:mm"
  */
