@@ -21,6 +21,10 @@ val regexpNonAlphaNorNumeric by lazy {
     Regex("[^\\p{L}\\p{Nd}]+")
 }
 
+val regexpAlowedInUrl by lazy {
+    Regex("[^a-z0-9-]")
+}
+
 fun String.removeNonAlphaNorNumeric(replacement: String = ""): String = this.replace(regexpNonAlphaNorNumeric, replacement)
 
 val regexpNotAlowedInFileName by lazy {
