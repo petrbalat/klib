@@ -1,16 +1,16 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="publish" type="CompoundRunConfigurationType">
-    <toRun name="klib:jdk [publish]" type="GradleRunConfiguration" />
-    <toRun name="klib:retrofit2 [publish]" type="GradleRunConfiguration" />
-    <toRun name="klib:geom [publish]" type="GradleRunConfiguration" />
-    <toRun name="klib:qr [publish]" type="GradleRunConfiguration" />
-    <toRun name="klib:nats [publish]" type="GradleRunConfiguration" />
-    <toRun name="klib:web [publish]" type="GradleRunConfiguration" />
-    <toRun name="klib:pdf [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:ftp [publish]" type="GradleRunConfiguration" />
-    <toRun name="klib:mail [publish]" type="GradleRunConfiguration" />
+    <toRun name="klib:geom [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:image [publish]" type="GradleRunConfiguration" />
+    <toRun name="klib:jdk [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:jwt [publish]" type="GradleRunConfiguration" />
+    <toRun name="klib:mail [publish]" type="GradleRunConfiguration" />
+    <toRun name="klib:nats [publish]" type="GradleRunConfiguration" />
+    <toRun name="klib:pdf [publish]" type="GradleRunConfiguration" />
+    <toRun name="klib:qr [publish]" type="GradleRunConfiguration" />
+    <toRun name="klib:retrofit2 [publish]" type="GradleRunConfiguration" />
+    <toRun name="klib:web [publish]" type="GradleRunConfiguration" />
     <method v="2" />
   </configuration>
 </component>
