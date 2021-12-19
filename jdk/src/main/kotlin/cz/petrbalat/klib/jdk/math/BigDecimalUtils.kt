@@ -17,7 +17,10 @@ fun Number.toBigDecimal(): BigDecimal = when (this) {
 /**
  * vrací  BigDecimal.ZERO pokud je ukazatel null
  */
-inline fun BigDecimal?.orZero(): BigDecimal = this ?: BigDecimal.ZERO
+inline fun BigDecimal?.orZero(): BigDecimal = this ?: zero
+
+inline val zero: BigDecimal
+    get() = BigDecimal.ZERO
 
 /**
  * porovnává zda jsou da bigDecimaly stejné
