@@ -21,6 +21,10 @@ val HttpServletRequest.clientIp: String
 
 val HttpServletRequest.ajax: Boolean get() = getHeader("X-Requested-With") == "XMLHttpRequest"
 
+val HttpServletRequest.headerMap: Map<String,List<String>> get() = headerNames.toList().associateWith {
+    getHeaders(it)?.toList().orEmpty()
+}
+
 val HttpServletRequest.referrer: URL? get() = getHeader("Referer")?.let {
     tryOn {
         URL(it)
