@@ -3,13 +3,11 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 buildscript {
     repositories {
-        jcenter()
         mavenCentral()
     }
 }
 
 repositories {
-    jcenter()
     mavenCentral()
 }
 
@@ -44,7 +42,6 @@ allprojects {
 
 subprojects {
     repositories {
-        jcenter()
         mavenCentral()
 //        maven { url = uri("https://repo.spring.io/milestone") }
     }
