@@ -7,13 +7,13 @@ dependencies {
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
 //    implementation(kotlin("reflect"))
 
-    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.13.0")
+    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.13.1")
     compileOnly("org.slf4j:slf4j-api:1.7.30")
 
     testImplementation("org.slf4j:slf4j-api:1.7.30")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
-    testImplementation("com.fasterxml.jackson.core:jackson-databind")
-    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin")
+    testImplementation("com.fasterxml.jackson.core:jackson-databind:2.13.1")
+    testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
     testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
     testImplementation(kotlin("test-junit5"))
 }

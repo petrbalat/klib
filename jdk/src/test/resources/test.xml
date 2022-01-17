@@ -1,0 +1,103 @@
+<are:Ares_odpovedi xmlns:are="http://wwwinfo.mfcr.cz/ares/xml_doc/schemas/ares/ares_answer_basic/v_1.0.3"
+                   xmlns:D="http://wwwinfo.mfcr.cz/ares/xml_doc/schemas/ares/ares_datatypes/v_1.0.3"
+                   xmlns:U="http://wwwinfo.mfcr.cz/ares/xml_doc/schemas/uvis_datatypes/v_1.0.3"
+                   odpoved_datum_cas="2022-01-17T09:42:57" odpoved_pocet="1" odpoved_typ="Basic" vystup_format="XML"
+                   xslt="klient" validation_XSLT="http://wwwinfo.mfcr.cz/ares/xml_doc/schemas/ares/ares_odpovedi.xsl"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://wwwinfo.mfcr.cz/ares/xml_doc/schemas/ares/ares_answer_basic/v_1.0.3 http://wwwinfo.mfcr.cz/ares/xml_doc/schemas/ares/ares_answer_basic/v_1.0.3/ares_answer_basic_v_1.0.3.xsd"
+                   Id="ares">
+    <are:Odpoved>
+        <D:PID>0</D:PID>
+        <D:VH>
+            <D:K>1</D:K>
+        </D:VH>
+        <D:PZA>1</D:PZA>
+        <D:UVOD>
+            <D:ND>VÃ½pis z dat Registru ARES - aktuÃ¡lnÃ­ stav ke dni 2022-01-10</D:ND>
+            <D:ADB>2022-01-10</D:ADB>
+            <D:DVY>2022-01-17</D:DVY>
+            <D:CAS>09:42:57</D:CAS>
+            <D:Typ_odkazu>0</D:Typ_odkazu>
+        </D:UVOD>
+        <D:VBAS>
+            <D:ICO zdroj="OR">03408086</D:ICO>
+            <D:DIC zdroj="DPH">CZ03408086</D:DIC>
+            <D:OF zdroj="OR">Urban &amp; Hejduk s.r.o.</D:OF>
+            <D:DV>2014-10-02</D:DV>
+            <D:PF zdroj="OR">
+                <D:KPF>112</D:KPF>
+                <D:NPF>SpoleÄnost s ruÄenÃ­m omezenÃ½m</D:NPF>
+            </D:PF>
+            <D:AD zdroj="ARES">
+                <D:UC>JugoslÃ¡vskÃ¡ 620</D:UC>
+                <D:PB>12000 Praha</D:PB>
+            </D:AD>
+            <D:AA zdroj="ARES">
+                <D:IDA>209693910</D:IDA>
+                <D:KS>203</D:KS>
+                <D:NS>ÄeskÃ¡ republika</D:NS>
+                <D:N>Praha</D:N>
+                <D:NCO>Vinohrady</D:NCO>
+                <D:NMC>Praha 2</D:NMC>
+                <D:NU>JugoslÃ¡vskÃ¡</D:NU>
+                <D:CD>620</D:CD>
+                <D:TCD>1</D:TCD>
+                <D:CO>29</D:CO>
+                <D:PSC>12000</D:PSC>
+                <D:AU>
+                    <U:KOL>19</U:KOL>
+                    <U:KK>19</U:KK>
+                    <U:KOK>3100</U:KOK>
+                    <U:KO>554782</U:KO>
+                    <U:KPO>27</U:KPO>
+                    <U:KN>27</U:KN>
+                    <U:KCO>490229</U:KCO>
+                    <U:KMC>500089</U:KMC>
+                    <U:PSC>12000</U:PSC>
+                    <U:KUL>450537</U:KUL>
+                    <U:CD>620</U:CD>
+                    <U:TCD>1</U:TCD>
+                    <U:CO>29</U:CO>
+                    <U:KA>21745897</U:KA>
+                    <U:KOB>21680906</U:KOB>
+                </D:AU>
+            </D:AA>
+            <D:PSU>NAANNANNNNNNNNNNNNNNNNNNANNNNN</D:PSU>
+            <D:ROR>
+                <D:SZ>
+                    <D:SD>
+                        <D:K>1</D:K>
+                        <D:T>MÄstskÃ½ soud v Praze</D:T>
+                    </D:SD>
+                    <D:OV>C 231175</D:OV>
+                </D:SZ>
+                <D:SOR>
+                    <D:SSU>AktivnÃ­</D:SSU>
+                    <D:KKZ>
+                        <D:K>0</D:K>
+                    </D:KKZ>
+                    <D:VY>
+                        <D:K>0</D:K>
+                    </D:VY>
+                    <D:ZAM>
+                        <D:K>0</D:K>
+                    </D:ZAM>
+                    <D:LI>
+                        <D:K>0</D:K>
+                    </D:LI>
+                </D:SOR>
+            </D:ROR>
+            <D:KPP zdroj="RES">10 - 19 zamÄstnancÅ¯</D:KPP>
+            <D:Nace>
+                <D:NACE zdroj="RES">6910</D:NACE>
+            </D:Nace>
+            <D:PPI>
+                <D:PP zdroj="OR">
+                    <D:T>
+                        VÃ½kon advokacie podle zÃ¡kona Ä. 85/1996 Sb., o advokacii, v platnÃ©m znÄnÃ­
+                    </D:T>
+                </D:PP>
+            </D:PPI>
+        </D:VBAS>
+    </are:Odpoved>
+</are:Ares_odpovedi>
