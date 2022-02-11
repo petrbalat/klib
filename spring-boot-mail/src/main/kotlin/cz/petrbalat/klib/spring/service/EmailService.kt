@@ -5,13 +5,17 @@ import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
 import java.util.concurrent.CompletableFuture
+import javax.mail.internet.InternetAddress
 import javax.mail.internet.MimeMessage
 
 /**
  * Created by Petr Balat on 20.2.2020
  */
-open class SmtpEmailService(private val mailSender: JavaMailSender,
-                            private val defaultFrom: String) : EmailService {
+open class SmtpEmailService(
+    private val mailSender: JavaMailSender,
+    private val defaultFrom: String,
+    private val defaultPersonal: String? = null,
+) : EmailService {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -20,11 +24,11 @@ open class SmtpEmailService(private val mailSender: JavaMailSender,
         val to: Array<String> = to.mapNotNull { it.trim().takeIf { it.isNotEmpty() } }.toTypedArray()
         try {
             val from = dto.from ?: defaultFrom
-            val dto = dto.copy(from = from)
+            val dto = dto.copy(from = from, personal = dto.personal ?: defaultPersonal)
             val mimeMessage: MimeMessage = mailSender.createMimeMessage()
 
             MimeMessageHelper(mimeMessage, dto.attachments.any()).apply {
-                setFrom(from)
+                setFrom(InternetAddress(from, dto.personal))
                 setTo(to)
                 setSubject(dto.subject)
                 setText(dto.body, dto.html)

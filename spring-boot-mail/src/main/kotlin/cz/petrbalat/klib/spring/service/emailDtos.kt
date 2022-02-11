@@ -9,6 +9,10 @@ data class EmailDto(
         val html: Boolean = true, val from: String? = null,
         val internalNote: String? = null,
 
+        /**
+         * jméno v emailu
+         */
+        val personal: String? = null,
         val user: Any? = null // for logging
 )
 
