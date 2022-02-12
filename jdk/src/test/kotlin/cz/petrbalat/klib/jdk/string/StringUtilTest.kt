@@ -5,9 +5,20 @@ import kotlin.test.*
 class StringUtilTest {
 
     @Test
+    fun replaceFirst() {
+        assertEquals("1bc", "abc".replaceFirst("1"))
+        assertEquals("", "".replaceFirst("1"))
+    }
+
+    @Test
+    fun repl() {
+        assertEquals("ab1", "abc".replaceLast("1"))
+        assertEquals("", "".replaceLast("1"))
+    }
+
+    @Test
     fun removeDiakritiku() {
         assertEquals("aABcescrzyaieuu123.png", "aABcěščřžýáíéúů123.png".removeDiakritiku())
-
         assertEquals("ESCRZYAIEUU", "ĚŠČŘŽÝÁÍÉÚŮ".removeDiakritiku())
     }
 

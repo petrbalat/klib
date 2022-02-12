@@ -25,20 +25,27 @@ val regexpAlowedInUrl by lazy {
     Regex("[^a-z0-9-]")
 }
 
-fun String.removeNonAlphaNorNumeric(replacement: String = ""): String = this.replace(regexpNonAlphaNorNumeric, replacement)
+fun String.removeNonAlphaNorNumeric(replacement: String = ""): String =
+    this.replace(regexpNonAlphaNorNumeric, replacement)
 
 val regexpNotAlowedInFileName by lazy {
     Regex("[^a-zA-Z0-9æøåÆØÅ_. -]")
 }
 
-fun removeNotAlowedInFileName(fileName: String, replacement: String = ""): String = fileName.replace(regexpNotAlowedInFileName, replacement).replace(" ", "")
+fun removeNotAlowedInFileName(fileName: String, replacement: String = ""): String =
+    fileName.replace(regexpNotAlowedInFileName, replacement).replace(" ", "")
 
 fun String?.emptyToNull(): String? = if (this.isNullOrEmpty()) null else this
 fun String?.blankToNull(): String? = if (this.isNullOrBlank()) null else this
 
+fun String.replaceFirst(replacement: CharSequence): String = this.replaceRange(0, 1, replacement)
+
+fun String.replaceLast(replacement: CharSequence): String = this.replaceRange(length - 1, length, replacement)
+
 private val emailmPattern by lazy {
     Pattern.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+")
 }
+
 fun parseEmail(str: String): Sequence<String> {
     val matcher = emailmPattern.matcher(str)
 
