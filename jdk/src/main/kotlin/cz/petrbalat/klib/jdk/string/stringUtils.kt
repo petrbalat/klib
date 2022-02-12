@@ -38,9 +38,17 @@ fun removeNotAlowedInFileName(fileName: String, replacement: String = ""): Strin
 fun String?.emptyToNull(): String? = if (this.isNullOrEmpty()) null else this
 fun String?.blankToNull(): String? = if (this.isNullOrBlank()) null else this
 
-fun String.replaceFirst(replacement: CharSequence): String = this.replaceRange(0, 1, replacement)
+fun String.replaceFirst(replacement: CharSequence): String {
+    if(isEmpty()) return this
 
-fun String.replaceLast(replacement: CharSequence): String = this.replaceRange(length - 1, length, replacement)
+    return this.replaceRange(0, 1, replacement)
+}
+
+fun String.replaceLast(replacement: CharSequence): String {
+    if (isEmpty()) return this
+
+    return replaceRange(length - 1, length, replacement)
+}
 
 private val emailmPattern by lazy {
     Pattern.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+")
