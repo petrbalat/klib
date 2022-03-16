@@ -11,6 +11,7 @@
     <toRun name="klib:qr [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:retrofit2 [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:web [publish]" type="GradleRunConfiguration" />
+    <toRun name="klib:webflux" type="GradleRunConfiguration" />
     <method v="2" />
   </configuration>
 </component>
