@@ -1,19 +1,17 @@
-package cz.petrbalat.klib.spring.jwt
+package cz.petrbalat.klib.spring.jwt.mvc
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import cz.petrbalat.klib.spring.jwt.mvc.JWTAuthenticationFilter
-import cz.petrbalat.klib.spring.jwt.mvc.JWTAuthorizationFilter
-import cz.petrbalat.klib.spring.jwt.mvc.PrepareUserToJson
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.core.userdetails.UserDetails
 import java.time.Duration
-import java.time.Instant
+import javax.servlet.Servlet
 
 
 /**
@@ -21,8 +19,11 @@ import java.time.Instant
  *
  */
 @Configuration(proxyBeanMethods = false)
-class JwtSecurityConfiguration(private @Value("\${jwt.token.secret}") val secret: String,
-                               private val mapper: ObjectMapper) {
+@ConditionalOnClass(Servlet::class)
+class JwtMvcSecurityConfiguration(
+    private @Value("\${jwt.token.secret}") val secret: String,
+    private val mapper: ObjectMapper,
+) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
@@ -32,9 +33,11 @@ class JwtSecurityConfiguration(private @Value("\${jwt.token.secret}") val secret
 
     @Bean
     @ConditionalOnMissingBean
-    fun jwtAuthenticationFilter(authenticationManagerBuilder: AuthenticationManagerBuilder,
-                                @Value("\${jwt.token.expirationDateTime:#{null}}") expirationDateTime: Duration?,
-                                @Autowired(required = false) userPrepare: PrepareUserToJson<UserDetails>?): JWTAuthenticationFilter {
+    fun jwtAuthenticationFilter(
+        authenticationManagerBuilder: AuthenticationManagerBuilder,
+        @Value("\${jwt.token.expirationDateTime:#{null}}") expirationDateTime: Duration?,
+        @Autowired(required = false) userPrepare: PrepareUserToJson<UserDetails>?
+    ): JWTAuthenticationFilter {
         logger.info("creating default JWTAuthenticationFilter")
         val duration: Duration = expirationDateTime ?: Duration.ofDays(7)
         return JWTAuthenticationFilter(secret, mapper, authenticationManagerBuilder, duration, userPrepare)
@@ -46,5 +49,6 @@ class JwtSecurityConfiguration(private @Value("\${jwt.token.secret}") val secret
         logger.info("creating default JWTAuthorizationFilter")
         return JWTAuthorizationFilter(secret, mapper, clazz)
     }
+
 }
 

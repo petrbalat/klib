@@ -1,17 +1,20 @@
 package cz.petrbalat.klib.jwt.config
 
-import addExceptionHandling
-import addFilters
-import cz.petrbalat.klib.spring.jwt.mvc.EmptyAuthenticationSuccessHandler
-import cz.petrbalat.klib.spring.jwt.mvc.JWTAuthenticationFilter
-import cz.petrbalat.klib.spring.jwt.mvc.JWTAuthorizationFilter
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.security.config.annotation.web.builders.HttpSecurity
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
-import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.http.HttpStatus
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.authentication.ReactiveAuthenticationManager
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity
+import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity
+import org.springframework.security.config.web.server.ServerHttpSecurity
+import org.springframework.security.core.AuthenticationException
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
+import org.springframework.security.web.server.SecurityWebFilterChain
+import org.springframework.security.web.server.context.ServerSecurityContextRepository
+import org.springframework.web.server.ServerWebExchange
+import reactor.core.publisher.Mono
 
 
 /**
@@ -19,21 +22,35 @@ import org.springframework.security.crypto.password.PasswordEncoder
  *
  */
 @Configuration(proxyBeanMethods = false)
-class TestSecurityConfiguration(private val authenticationFilter: JWTAuthenticationFilter,
-                                private val authorizationFilter: JWTAuthorizationFilter) : WebSecurityConfigurerAdapter() {
+@EnableWebFluxSecurity
+@EnableReactiveMethodSecurity
+class TestSecurityConfiguration() {
 
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
 
-    public override fun configure(http: HttpSecurity) {
-        http.cors()
-                .and().csrf().disable().formLogin().loginPage("/login").successHandler(EmptyAuthenticationSuccessHandler())
-                .and().addFilters(authenticationFilter, authorizationFilter)
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and().addExceptionHandling()
-                .and().headers().frameOptions().disable()
-
-        println("test security config")
-    }
+    @Bean
+    fun securitygWebFilterChain(
+        http: ServerHttpSecurity,
+        securityContextRepository: ServerSecurityContextRepository,
+        authenticationManager: ReactiveAuthenticationManager
+    ): SecurityWebFilterChain =
+        http.cors().disable()
+            .exceptionHandling()
+            .authenticationEntryPoint { swe: ServerWebExchange, e: AuthenticationException? ->
+                Mono.fromRunnable { swe.response.statusCode = HttpStatus.UNAUTHORIZED }
+            }.accessDeniedHandler { swe: ServerWebExchange, e: AccessDeniedException? ->
+                Mono.fromRunnable { swe.response.statusCode = HttpStatus.FORBIDDEN }
+            }.and()
+            .csrf().disable()
+            .formLogin().disable()
+            //            .formLogin().loginPage("/login").and()
+            .httpBasic().disable()
+            .authenticationManager(authenticationManager)
+            .securityContextRepository(securityContextRepository)
+            .authorizeExchange()
+            //            .pathMatchers(HttpMethod.OPTIONS).permitAll()
+            .pathMatchers("/").permitAll()
+            .and().build()
 }
 
