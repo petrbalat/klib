@@ -21,6 +21,11 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter")
 	compileOnly("com.fasterxml.jackson.core:jackson-databind")
 
+//	ImageService.uploadImage FilePart
+	compileOnly(project(":spring-boot-webflux"))
+	compileOnly("org.springframework:spring-web")
+	compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
+
 	api(project(":jdk"))
 	api(project(":ftp"))
 	api("org.imgscalr:imgscalr-lib:4.2")
