@@ -13,8 +13,8 @@ class KlibAuthenticationManager(private val jwtUtil: JwtUtil) : ReactiveAuthenti
 
     override fun authenticate(authentication: Authentication): Mono<Authentication> {
         val authToken: String = authentication.credentials.toString()
-        val validateToken: Boolean = jwtUtil.validateToken(authToken)
-        return Mono.just(validateToken)
+        return Mono.fromSupplier { jwtUtil.validateToken(authToken) }
+            .onErrorReturn(false)
             .filter { it }
             .switchIfEmpty(Mono.empty())
             .map {
