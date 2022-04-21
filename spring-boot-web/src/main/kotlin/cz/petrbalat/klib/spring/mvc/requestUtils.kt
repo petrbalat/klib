@@ -1,7 +1,7 @@
 package cz.petrbalat.klib.spring.mvc
 
 import cz.petrbalat.klib.jdk.string.emptyToNull
-import cz.petrbalat.klib.jdk.tryOn
+import cz.petrbalat.klib.jdk.tryOrNull
 import java.net.URL
 import javax.servlet.http.HttpServletRequest
 
@@ -26,7 +26,7 @@ val HttpServletRequest.headerMap: Map<String,List<String>> get() = headerNames.t
 }
 
 val HttpServletRequest.referrer: URL? get() = getHeader("Referer")?.let {
-    tryOn {
+    tryOrNull {
         URL(it)
     }
 }

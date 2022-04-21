@@ -3,7 +3,7 @@ package cz.petrbalat.klib.spring.web
 import cz.petrbalat.klib.jdk.io.permsDefault
 import cz.petrbalat.klib.jdk.io.pureFileName
 import cz.petrbalat.klib.jdk.string.randomString
-import cz.petrbalat.klib.jdk.tryOn
+import cz.petrbalat.klib.jdk.tryOrNull
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 import java.nio.file.Files
@@ -30,19 +30,23 @@ fun MultipartFile.parseOriginalFilename(): String? = originalFilename?.substring
  *
  * odstraní z názvu diakritiku, mezery apod a přidá do názvu random string pokud již existuje soubor
  */
-fun MultipartFile.copyTo(directory: String, overwrite: Boolean = false,
-                         perms: Set<PosixFilePermission> = permsDefault): String {
+fun MultipartFile.copyTo(
+    directory: String, overwrite: Boolean = false,
+    perms: Set<PosixFilePermission> = permsDefault
+): String {
     val fileName = this.fileName
     val destFile = File(directory, fileName).let {
-        if (it.exists() && !overwrite) File(directory, "${it.nameWithoutExtension}-${randomString(4)}.${it.extension}") // přidám náhodný řetězec
+        if (it.exists() && !overwrite) File(
+            directory,
+            "${it.nameWithoutExtension}-${randomString(4)}.${it.extension}"
+        ) // přidám náhodný řetězec
         else if (it.exists() && overwrite) {
             it.delete()
             it
-        }
-        else it
+        } else it
     }
     this.transferTo(destFile)
-    tryOn {
+    tryOrNull {
         Files.setPosixFilePermissions(destFile.toPath(), perms)
     }
 
