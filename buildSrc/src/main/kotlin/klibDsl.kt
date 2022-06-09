@@ -25,7 +25,7 @@ fun Project.publishingKlib(pe: PublishingExtension) {
             }
         }
         if (1 == 1) return@with
-
+/*
         publications {
             create<MavenPublication>("mavenPublication") {
 
@@ -63,5 +63,6 @@ fun Project.publishingKlib(pe: PublishingExtension) {
                 }
             }
         }
+        */
     }
 }

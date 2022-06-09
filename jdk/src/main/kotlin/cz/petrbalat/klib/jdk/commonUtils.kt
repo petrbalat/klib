@@ -40,7 +40,7 @@ fun Double.relativelyEqual(other: Double, decimalPlace: Double): Boolean = Math.
 fun <T> Optional<T>.orNull(): T? = orElse(null)
 
 inline val <E : Enum<E>> Enum<E>.fullName: String
-    get() = "${declaringClass.name}.$name"
+    get() = "${javaClass.declaringClass.name}.$name"
 
 interface Describe {
 
