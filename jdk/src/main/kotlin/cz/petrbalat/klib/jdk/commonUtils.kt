@@ -7,12 +7,12 @@ import java.util.*
  */
 fun Boolean.toBooleanInt(): Int = if (this) 1 else 0
 
-fun Throwable.causeSequence(): Sequence<Throwable> = generateSequence(this, {
+fun Throwable.causeSequence(): Sequence<Throwable> = generateSequence(this) {
     if (it.cause == it) {
         return@generateSequence null
     }
     it.cause
-})
+}
 
 @Deprecated("use tryOrNull", ReplaceWith(expression = "tryOrNull(action)", "cz.petrbalat.klib.jdk.tryOrNull"))
 inline fun <T> tryOn(action: () -> T?): T? = try {
@@ -40,7 +40,7 @@ fun Double.relativelyEqual(other: Double, decimalPlace: Double): Boolean = Math.
 fun <T> Optional<T>.orNull(): T? = orElse(null)
 
 inline val <E : Enum<E>> Enum<E>.fullName: String
-    get() = "${javaClass.declaringClass.name}.$name"
+    get() = "${javaClass.name}.$name"
 
 interface Describe {
 
