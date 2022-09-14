@@ -1,5 +1,6 @@
 package cz.petrbalat.klib.spring.image
 
+import cz.petrbalat.klib.jdk.io.allPermission
 import cz.petrbalat.klib.jdk.tryOrNull
 import cz.petrbalat.klib.spring.image.cwebp.convertToWebP
 import cz.petrbalat.klib.spring.image.image.ReadImageDto
@@ -10,6 +11,7 @@ import org.imgscalr.Scalr
 import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.nio.file.Path
+import java.nio.file.attribute.PosixFilePermissions
 import kotlin.io.path.*
 
 class FileSystemImageService(
@@ -102,7 +104,11 @@ class FileSystemImageService(
     private fun createDestinationDirIfNotExist(directory: String): Path  {
         val destination: Path = path / directory
         if (!destination.exists()) {
-            destination.createDirectories()
+            try {
+                destination.createDirectories(PosixFilePermissions.asFileAttribute(allPermission))
+            } catch (th: Throwable) {
+                destination.createDirectories()
+            }
         }
         return destination
     }

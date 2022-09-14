@@ -84,3 +84,9 @@ val permsDefault: Set<PosixFilePermission> = setOf(
     PosixFilePermission.OTHERS_READ, PosixFilePermission.GROUP_READ, PosixFilePermission.GROUP_WRITE,
     PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE
 )
+
+val allPermission: Set<PosixFilePermission> = setOf(
+    PosixFilePermission.OTHERS_READ, PosixFilePermission.GROUP_READ,  PosixFilePermission.OWNER_READ,
+    PosixFilePermission.OTHERS_WRITE, PosixFilePermission.GROUP_WRITE,  PosixFilePermission.OWNER_WRITE,
+    PosixFilePermission.OTHERS_EXECUTE, PosixFilePermission.GROUP_EXECUTE,  PosixFilePermission.OWNER_EXECUTE,
+)
