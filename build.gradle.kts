@@ -12,15 +12,15 @@ repositories {
 }
 
 plugins {
-    id("org.springframework.boot") version "2.7.3" apply false
-    id("io.spring.dependency-management") version "1.0.13.RELEASE" apply false
-    kotlin("jvm") version "1.7.10" apply false
-    kotlin("plugin.spring") version "1.7.10" apply false
+    id("org.springframework.boot") version "2.7.4" apply false
+    id("io.spring.dependency-management") version "1.0.14.RELEASE" apply false
+    kotlin("jvm") version "1.7.20-RC" apply false
+    kotlin("plugin.spring") version "1.7.20-RC" apply false
 }
 
 allprojects {
     group = "io.github.petrbalat"
-    version = "0.60.1"
+    version = "0.61.0"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "1.8"
