@@ -13,15 +13,12 @@ import kotlin.coroutines.suspendCoroutine
 
 typealias StreamingMessage = io.nats.streaming.Message
 
-@kotlin.ExperimentalStdlibApi
 fun Method.invokeMessage(it: Message, bean: Any, mapper: ObjectMapper, logger: Logger): Any? =
     this.invokeMessage(it.data, it, bean, mapper, logger)
 
-@kotlin.ExperimentalStdlibApi
 fun Method.invokeMessage(it: StreamingMessage, bean: Any, mapper: ObjectMapper, logger: Logger): Any? =
     this.invokeMessage(it.data, it, bean, mapper, logger)
 
-@kotlin.ExperimentalStdlibApi
 private fun Method.invokeMessage(data_: ByteArray, message: Any, bean: Any, mapper: ObjectMapper, logger: Logger): Any? {
     //první parametr data
     val dataType = this.parameterTypes[0]

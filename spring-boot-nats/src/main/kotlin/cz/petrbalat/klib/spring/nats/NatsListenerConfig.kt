@@ -19,7 +19,6 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnClass(Connection::class)
-@kotlin.ExperimentalStdlibApi
 class NatsListenerConfig(private val connection: Connection,
                          private val mapper: ObjectMapper) {
 
