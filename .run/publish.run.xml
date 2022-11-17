@@ -2,6 +2,7 @@
   <configuration default="false" name="publish" type="CompoundRunConfigurationType">
     <toRun name="klib:ftp [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:geom [publish]" type="GradleRunConfiguration" />
+    <toRun name="klib:graphql [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:image [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:jdk [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:jwt [publish]" type="GradleRunConfiguration" />

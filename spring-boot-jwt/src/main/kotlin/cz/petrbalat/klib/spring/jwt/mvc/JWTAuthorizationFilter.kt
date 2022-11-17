@@ -10,6 +10,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.web.filter.OncePerRequestFilter
 import toKey
+import java.net.URLDecoder
 import javax.servlet.FilterChain
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -19,16 +20,23 @@ import javax.servlet.http.HttpServletResponse
  *
  * @see https://auth0.com/blog/implementing-jwt-authentication-on-spring-boot/
  */
-open class JWTAuthorizationFilter(private val secret: String,
-                                  private val mapper: ObjectMapper,
-                                  private val clazz: Class<UserDetails>) : OncePerRequestFilter() {
+open class JWTAuthorizationFilter(
+    private val secret: String,
+    private val mapper: ObjectMapper,
+    private val clazz: Class<UserDetails>
+) : OncePerRequestFilter() {
 
     private val deserializer = JacksonDeserializer(mapper)
 
     override fun doFilterInternal(req: HttpServletRequest, res: HttpServletResponse, chain: FilterChain) {
-        val token: String? = req.getHeader(HEADER_STRING)
-                ?.takeIf { it.startsWith(TOKEN_PREFIX) }
-                ?.substringAfter(TOKEN_PREFIX)
+        fun readFromCookie() =
+            req.cookies?.firstOrNull { it.name?.equals(HEADER_STRING, ignoreCase = true) == true }?.value?.let {
+                URLDecoder.decode(it)
+            }
+
+        val token: String? = (req.getHeader(HEADER_STRING) ?: readFromCookie())
+            ?.takeIf { it.startsWith(TOKEN_PREFIX) }
+            ?.substringAfter(TOKEN_PREFIX)
         if (token == null) {
             SecurityContextHolder.getContext().authentication = null
             chain.doFilter(req, res)
@@ -48,10 +56,10 @@ open class JWTAuthorizationFilter(private val secret: String,
     private fun getAuthentication(claimJws: String): Authentication? {
         // parse the token.
         val subject: String = Jwts.parserBuilder().setSigningKey(secret.toKey())
-                .deserializeJsonWith(deserializer)
-                .build()
-                .parseClaimsJws(claimJws)
-                .body?.subject ?: return null
+            .deserializeJsonWith(deserializer)
+            .build()
+            .parseClaimsJws(claimJws)
+            .body?.subject ?: return null
 
         val user: UserDetails = mapper.readValue(subject, clazz)
         return UsernamePasswordAuthenticationToken(user, null, user.authorities)
