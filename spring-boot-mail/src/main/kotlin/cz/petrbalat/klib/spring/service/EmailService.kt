@@ -1,12 +1,12 @@
 package cz.petrbalat.klib.spring.service
 
+import jakarta.mail.internet.InternetAddress
+import jakarta.mail.internet.MimeMessage
 import org.slf4j.LoggerFactory
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
 import org.springframework.scheduling.annotation.Async
 import java.util.concurrent.CompletableFuture
-import javax.mail.internet.InternetAddress
-import javax.mail.internet.MimeMessage
 
 /**
  * Created by Petr Balat on 20.2.2020

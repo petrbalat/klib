@@ -1,0 +1,2 @@
+cz.petrbalat.klib.spring.jwt.mvc.JwtMvcSecurityConfiguration
+cz.petrbalat.klib.spring.jwt.webflux.JwtWebFluxSecurityConfiguration

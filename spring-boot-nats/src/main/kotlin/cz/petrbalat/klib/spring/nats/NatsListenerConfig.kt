@@ -6,6 +6,7 @@ import io.nats.client.ConnectionListener
 import io.nats.client.ConnectionListener.Events
 import io.nats.client.Dispatcher
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.ApplicationContext
@@ -17,7 +18,7 @@ import org.springframework.context.annotation.Configuration
  * @author Petr Balat
  *
  */
-@Configuration(proxyBeanMethods = false)
+@AutoConfiguration
 @ConditionalOnClass(Connection::class)
 class NatsListenerConfig(private val connection: Connection,
                          private val mapper: ObjectMapper) {

@@ -1,5 +1,6 @@
 package cz.petrbalat.klib.jwt.config
 
+import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpStatus
@@ -21,7 +22,7 @@ import reactor.core.publisher.Mono
  * @author Petr Balat
  *
  */
-@Configuration(proxyBeanMethods = false)
+@AutoConfiguration
 @EnableWebFluxSecurity
 @EnableReactiveMethodSecurity
 class TestSecurityConfiguration() {

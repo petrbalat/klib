@@ -1,1 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=cz.petrbalat.klib.spring.image.ImageConfig

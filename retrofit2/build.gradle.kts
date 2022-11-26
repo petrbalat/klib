@@ -16,6 +16,7 @@ tasks.getByName<BootJar>("bootJar") {
 dependencies {
     implementation(kotlin("stdlib"))
 //    implementation(kotlin("reflect"))
+    implementation("jakarta.xml.bind:jakarta.xml.bind-api")
 
     api("com.squareup.retrofit2:retrofit:2.9.0")
 

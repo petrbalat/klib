@@ -3,6 +3,7 @@ package cz.petrbalat.klib.spring.graphql
 import graphql.schema.Coercing
 import graphql.schema.GraphQLScalarType
 import graphql.schema.idl.RuntimeWiring
+import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.graphql.GraphQlAutoConfiguration
@@ -20,7 +21,7 @@ import java.time.ZonedDateTime
  */
 @AutoConfigureBefore(GraphQlAutoConfiguration::class)
 @ConditionalOnClass(GraphQlAutoConfiguration::class)
-@Configuration(proxyBeanMethods = false)
+@AutoConfiguration
 class GraphqlConfig {
 
     /**

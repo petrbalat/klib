@@ -3,6 +3,7 @@ package cz.petrbalat.klib.spring.jwt.webflux
 import com.fasterxml.jackson.databind.ObjectMapper
 import cz.petrbalat.klib.spring.jwt.util.JwtUtil
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -17,7 +18,7 @@ import java.time.Duration
  * @author Petr Balat
  *
  */
-@Configuration(proxyBeanMethods = false)
+@AutoConfiguration
 @ConditionalOnClass(WebFluxConfigurer::class)
 class JwtWebFluxSecurityConfiguration {
 

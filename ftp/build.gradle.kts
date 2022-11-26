@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm")
     id("org.springframework.boot")
+    kotlin("jvm")
 }
 
 tasks.getByName<Jar>("jar") {
