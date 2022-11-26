@@ -20,7 +20,7 @@ dependencies {
     implementation("org.xhtmlrenderer:flying-saucer-pdf-itext5:9.1.20")
 
     compileOnly("org.springframework.boot:spring-boot-starter-web")
-//    compileOnly("org.slf4j:slf4j-api:1.7.30")
+//    compileOnly("org.slf4j:slf4j-api")
 
 
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")

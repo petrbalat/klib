@@ -17,9 +17,9 @@ dependencies {
 
     implementation(project(":jdk"))
     api("commons-net:commons-net:3.8.0")
-    compileOnly("org.slf4j:slf4j-api:1.7.30")
+    compileOnly("org.slf4j:slf4j-api")
 
-    testImplementation("org.slf4j:slf4j-api:1.7.30")
+    testImplementation("org.slf4j:slf4j-api")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
     testImplementation("commons-net:commons-net:3.8.0")
     testImplementation("org.junit.jupiter:junit-jupiter")

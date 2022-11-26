@@ -1,16 +1,25 @@
 plugins {
     kotlin("jvm")
+    id("org.springframework.boot")
 }
+
+tasks.getByName<Jar>("jar") {
+    enabled = true
+}
+tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
+    enabled = false
+}
+
 
 dependencies {
     implementation(kotlin("stdlib"))
     compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
 //    implementation(kotlin("reflect"))
 
-    compileOnly("com.fasterxml.jackson.core:jackson-databind:2.13.1")
-    compileOnly("org.slf4j:slf4j-api:1.7.30")
+    compileOnly("com.fasterxml.jackson.core:jackson-databind")
+    compileOnly("org.slf4j:slf4j-api")
 
-    testImplementation("org.slf4j:slf4j-api:1.7.30")
+    testImplementation("org.slf4j:slf4j-api")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.13.1")
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")

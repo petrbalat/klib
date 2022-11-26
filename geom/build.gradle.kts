@@ -1,5 +1,3 @@
-import org.springframework.boot.gradle.tasks.bundling.BootJar
-
 plugins {
     id("org.springframework.boot")
     kotlin("jvm")
@@ -8,7 +6,7 @@ plugins {
 tasks.getByName<Jar>("jar") {
     enabled = true
 }
-tasks.getByName<BootJar>("bootJar") {
+tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
     enabled = false
 }
 
