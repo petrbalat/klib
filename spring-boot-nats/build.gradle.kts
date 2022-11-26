@@ -15,7 +15,7 @@ tasks.getByName<BootJar>("bootJar") {
 }
 
 dependencies {
-	implementation(kotlin("stdlib-jdk8"))
+	implementation(kotlin("stdlib"))
 //	compileOnly(kotlin("kotlin-reflect"))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
 

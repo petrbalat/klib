@@ -17,7 +17,7 @@ tasks.getByName<BootJar>("bootJar") {
 dependencies {
 	implementation(project(":jdk"))
 
-	implementation(kotlin("stdlib-jdk8"))
+	implementation(kotlin("stdlib"))
 	implementation(kotlin("reflect"))
 
 	implementation(project(":spring-boot-web")) {

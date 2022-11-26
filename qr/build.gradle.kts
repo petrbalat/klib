@@ -14,7 +14,7 @@ tasks.getByName<BootJar>("bootJar") {
 
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("stdlib"))
     implementation(project(":jdk"))
 //    implementation(kotlin("reflect"))
 

@@ -14,7 +14,7 @@ tasks.getByName<BootJar>("bootJar") {
 
 
 dependencies {
-    implementation(kotlin("stdlib-jdk8"))
+    implementation(kotlin("stdlib"))
 //    implementation(kotlin("reflect"))
 
     api("org.geolatte:geolatte-geom:1.4.0")
