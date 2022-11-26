@@ -19,7 +19,7 @@ dependencies {
 
     api("com.squareup.retrofit2:retrofit:2.9.0")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
+    testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(kotlin("test-junit5"))
 }
 

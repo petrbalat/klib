@@ -22,7 +22,7 @@ dependencies {
     api("com.google.zxing:core:3.4.1")
     api("com.google.zxing:javase:3.4.1")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
+    testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(kotlin("test-junit5"))
 }
 

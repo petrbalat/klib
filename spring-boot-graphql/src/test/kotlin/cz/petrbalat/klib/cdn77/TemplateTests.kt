@@ -1,22 +1,16 @@
 package cz.petrbalat.klib.cdn77
 
-import cz.petrbalat.klib.spring.nats.NatsTemplate
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import kotlin.test.Ignore
 import kotlin.test.Test
+import kotlin.test.assertTrue
 
-//@SpringBootTest
-@Ignore
+@SpringBootTest
 class TemplateTests {
-
-    @Autowired
-    private lateinit var template: NatsTemplate
 
     @Test
     fun testPublish1() {
-        template.publish("test.1", TestDto("Hello Peter"))
-
-        Thread.sleep(1000)
+        assertTrue(true)
     }
 
 

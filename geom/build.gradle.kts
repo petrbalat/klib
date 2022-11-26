@@ -20,7 +20,7 @@ dependencies {
     api("org.geolatte:geolatte-geom:1.4.0")
     compileOnly("com.fasterxml.jackson.core:jackson-databind")
 
-    testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
+    testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(kotlin("test-junit5"))
 }
 

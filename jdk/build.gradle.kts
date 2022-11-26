@@ -14,7 +14,7 @@ dependencies {
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
     testImplementation("com.fasterxml.jackson.core:jackson-databind:2.13.1")
     testImplementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.13.1")
-    testImplementation("org.junit.jupiter:junit-jupiter:5.5.2")
+    testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(kotlin("test-junit5"))
 }
 
