@@ -16,8 +16,8 @@ dependencies {
 //    implementation(kotlin("reflect"))
 
     //  pdf
-    implementation("org.xhtmlrenderer:flying-saucer-core:9.1.20")
-    implementation("org.xhtmlrenderer:flying-saucer-pdf-itext5:9.1.20")
+    implementation("org.xhtmlrenderer:flying-saucer-core:9.1.22")
+    implementation("org.xhtmlrenderer:flying-saucer-pdf-itext5:9.1.22")
 
     compileOnly("org.springframework.boot:spring-boot-starter-web")
 //    compileOnly("org.slf4j:slf4j-api")
