@@ -10,6 +10,7 @@ import io.nats.streaming.SubscriptionOptions
 import io.nats.streaming.protobuf.StartPosition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -23,11 +24,10 @@ import java.time.Duration
  * @author Petr Balat
  *
  */
-@Configuration(proxyBeanMethods = false)
+@AutoConfiguration
 @ConditionalOnClass(StreamingConnection::class)
 @ConditionalOnProperty("clusterId", prefix = PREFIX)
 @AutoConfigureAfter(NatsListenerConfig::class)
-@kotlin.ExperimentalStdlibApi
 class NatsStreamingListenerConfig(private val mapper: ObjectMapper)  {
 
     @Bean

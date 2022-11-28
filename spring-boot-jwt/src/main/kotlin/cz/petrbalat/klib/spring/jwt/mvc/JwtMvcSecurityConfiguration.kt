@@ -11,14 +11,15 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.core.userdetails.UserDetails
 import java.time.Duration
-import javax.servlet.Servlet
+import jakarta.servlet.Servlet
+import org.springframework.boot.autoconfigure.AutoConfiguration
 
 
 /**
  * @author Petr Balat
  *
  */
-@Configuration(proxyBeanMethods = false)
+@AutoConfiguration
 @ConditionalOnClass(Servlet::class)
 class JwtMvcSecurityConfiguration(
     private @Value("\${jwt.token.secret}") val secret: String,

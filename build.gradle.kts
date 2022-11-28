@@ -12,25 +12,25 @@ repositories {
 }
 
 plugins {
-    id("org.springframework.boot") version "2.7.6" apply false
-    id("io.spring.dependency-management") version "1.0.15.RELEASE" apply false
+    id("org.springframework.boot") version "3.0.0" apply false
+    id("io.spring.dependency-management") version "1.1.0" apply false
     kotlin("jvm") version "1.8.0-Beta" apply false
     kotlin("plugin.spring") version "1.8.0-Beta" apply false
 }
 
 allprojects {
     group = "io.github.petrbalat"
-    version = "0.80.0"
+    version = "1.0.4"
 
     tasks.withType<JavaCompile> {
-        sourceCompatibility = "1.8"
-        targetCompatibility = "1.8"
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
     }
 
     tasks.withType<KotlinCompile> {
         kotlinOptions {
             freeCompilerArgs = listOf("-Xjsr305=strict", "-progressive", "-Xjvm-default=all")
-            jvmTarget = "1.8"
+            jvmTarget = "17"
         }
     }
 

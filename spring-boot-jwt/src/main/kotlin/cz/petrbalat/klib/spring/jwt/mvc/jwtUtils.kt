@@ -6,7 +6,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import java.util.*
 import javax.crypto.SecretKey
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
 
 internal fun String.toKey(): SecretKey {
     val toByteArray = Base64.getEncoder().encode(toByteArray())
