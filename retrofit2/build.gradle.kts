@@ -20,6 +20,8 @@ dependencies {
 
     api("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.google.code.findbugs:jsr305:3.0.2")
+    compileOnly("com.squareup.okhttp3:logging-interceptor:4.9.0")
+    compileOnly("org.slf4j:slf4j-api")
 
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(kotlin("test-junit5"))
