@@ -85,3 +85,9 @@ fun LocalDate.startWeek(start: DayOfWeek = DayOfWeek.MONDAY, minus:Boolean = tru
         day = if(minus) day.minusDays(1) else day.plusDays(1)
     }
 }
+
+fun LocalDateTime.roundUpToMinute(): LocalDateTime = withNano(0).run {
+    if (second > 0) plusMinutes(1).withSecond(0) else this
+}
+
+fun LocalDateTime.roundDownToMinute(): LocalDateTime = withNano(0).withSecond(0)
