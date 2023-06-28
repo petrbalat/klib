@@ -103,6 +103,31 @@ class LocalDateUtilsTest {
         assertEquals(LocalDate.of(2017, 9, 17), LocalDate.of(2017, 9, 18).startWeek(DayOfWeek.SUNDAY))
     }
 
+    @Test
+    fun testRoundUpToMinute() {
+        assertEquals(
+            LocalDateTime.of(2023, 6, 28, 9, 41, 0),
+            LocalDateTime.of(2023, 6, 28, 9, 40, 12).roundUpToMinute()
+        )
+        assertEquals(
+            LocalDateTime.of(2023, 6, 28, 9, 41, 0),
+            LocalDateTime.of(2023, 6, 28, 9, 40, 42).roundUpToMinute()
+        )
+    }
+
+
+    @Test
+    fun roundDownToMinute() {
+        assertEquals(
+            LocalDateTime.of(2023, 6, 28, 9, 40, 0),
+            LocalDateTime.of(2023, 6, 28, 9, 40, 12).roundDownToMinute()
+        )
+        assertEquals(
+            LocalDateTime.of(2023, 6, 28, 9, 40, 0),
+            LocalDateTime.of(2023, 6, 28, 9, 40, 42).roundDownToMinute()
+        )
+    }
+
     private val datum: Date
         get() {
             val calendar = Calendar.getInstance()
