@@ -7,7 +7,6 @@
     <toRun name="klib:jdk [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:jwt [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:mail [publish]" type="GradleRunConfiguration" />
-    <toRun name="klib:nats [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:pdf [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:qr [publish]" type="GradleRunConfiguration" />
     <toRun name="klib:retrofit2 [publish]" type="GradleRunConfiguration" />

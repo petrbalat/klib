@@ -12,57 +12,13 @@ fun Project.publishingKlib(pe: PublishingExtension) {
     with(pe) {
         repositories {
             maven {
-                // FIXME sign
-//                url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
-                    url =  uri("https://maven.pkg.jetbrains.space/lp/p/lplib/maven")
-                //in gradle.properties set ossrhUsername an ossrhPassword=
-                val ossrhUsername: String? by project
+                url = uri("https://maven.pkg.github.com/petrbalat/klib")
                 val ossrhPassword: String? by project
                 credentials {
-                    username = ossrhUsername ?: "Unknown user"
+                    username = "petrbalat"
                     password = ossrhPassword ?: "Unknown password"
                 }
             }
         }
-        if (1 == 1) return@with
-/*
-        publications {
-            create<MavenPublication>("mavenPublication") {
-
-                from(project.components["java"])
-
-                val sourcesJar by tasks.creating(Jar::class) {
-                    archiveClassifier.set("sources")
-
-                    from(sourceSets.getByName("main").allSource)
-                }
-
-                artifact(sourcesJar)
-
-                versionMapping {
-                    usage("java-api") {
-                        fromResolutionOf("runtimeClasspath")
-                    }
-                    usage("java-runtime") {
-                        fromResolutionResult()
-                    }
-                }
-
-                pom {
-                    scm {
-                        connection.set("scm:git:git://github.com/petrbalat/klib.git")
-                        developerConnection.set("scm:git:https://github.com/petrbalat/klib.git")
-                        url.set("https://github.com/petrbalat/klib")
-                    }
-                }
-            }
-
-            repositories {
-                maven {
-                    url = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
-                }
-            }
-        }
-        */
     }
 }

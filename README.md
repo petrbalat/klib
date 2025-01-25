@@ -7,7 +7,7 @@
 Gradle:
 ```
 repositories {
-    maven { setUrl("https://jitpack.io") }
+    maven { setUrl("https://maven.pkg.github.com/petrbalat/klib") }
 }
 
 implementation("com.github.petrbalat.klib:jdk:VERSION")
