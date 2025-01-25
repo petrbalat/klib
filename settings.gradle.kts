@@ -19,7 +19,6 @@ include(
     "spring-boot-web",
     "spring-boot-webflux",
     "spring-boot-mail",
-    "spring-boot-nats",
     "spring-boot-image",
     "geom",
     "retrofit2",
