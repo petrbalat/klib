@@ -44,18 +44,7 @@ class GraphqlConfig {
 
             val localDateTime = GraphQLScalarType.newScalar()
                 .name("LocalDateTime")
-                .coercing(object :
-                    Coercing<LocalDateTime, String> {
-                    override fun serialize(dataFetcherResult: Any): String = dataFetcherResult.toString()
-
-                    override fun parseValue(input: Any): LocalDateTime {
-                        val zonedDateTime = ZonedDateTime.parse(input.toString())
-                        val instant: ZonedDateTime = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault())
-                        return instant.toLocalDateTime()
-                    }
-
-                    override fun parseLiteral(input: Any): LocalDateTime = parseValue(input)
-                })
+                .coercing(LocalDateTimeCoarcing())
 
             builder.scalar(date.build()).scalar(localDateTime.build())
         }

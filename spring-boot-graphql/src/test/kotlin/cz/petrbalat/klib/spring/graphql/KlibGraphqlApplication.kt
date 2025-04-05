@@ -1,4 +1,4 @@
-package cz.petrbalat.klib.cdn77
+package cz.petrbalat.klib.spring.graphql
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 
