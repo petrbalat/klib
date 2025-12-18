@@ -12,8 +12,8 @@ class JsonFileDbDelegate<T>(private val clazz: Class<T>,
                             private val directory: File,
                             private val serialize: (value: T, writer: Writer) -> Unit,
                             private val deserialize: (reader: Reader) -> T,
-                            private val dbName: String = if (clazz.isArray) "${clazz.componentType.simpleName.toLowerCase()}s.json"
-                            else "${clazz.simpleName.toLowerCase()}.json",
+                            private val dbName: String = if (clazz.isArray) "${clazz.componentType.simpleName.lowercase()}s.json"
+                            else "${clazz.simpleName.lowercase()}.json",
                             lock: Any? = null) {
 
     private val logger = LoggerFactory.getLogger(javaClass)

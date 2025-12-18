@@ -17,7 +17,7 @@ val emptyRegex by lazy { " +".toRegex() }
  * odstraní diakritiku a mezery
  */
 fun pureFileName(originalFilename: String): String = removeNotAlowedInFileName(originalFilename, " ")
-    .removeDiakritiku().toLowerCase().replace(emptyRegex, "_")
+    .removeDiakritiku().lowercase().replace(emptyRegex, "_")
 
 /**
  * zkopíruje do adresáře s path.
@@ -29,7 +29,7 @@ fun InputStream.copyTo(
 ): File {
     val origName: String = pureFileName(originalFilename)
     val uploadFile: File = File(path, "$pathPrepend$origName").let {
-        if (it.exists()) File(path, "${randomString(4).toLowerCase()}-$pathPrepend$origName") else it
+        if (it.exists()) File(path, "${randomString(4).lowercase()}-$pathPrepend$origName") else it
     }
     assert(uploadFile.createNewFile())
     tryOrNull {
