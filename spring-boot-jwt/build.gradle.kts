@@ -21,7 +21,6 @@ dependencies {
 
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	compileOnly("org.springframework.boot:spring-boot-starter-web")
-	compileOnly("org.springframework.boot:spring-boot-starter-webflux")
 
 	implementation("com.fasterxml.jackson.core:jackson-databind")
 

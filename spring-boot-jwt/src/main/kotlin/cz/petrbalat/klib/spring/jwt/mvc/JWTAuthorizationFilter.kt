@@ -1,19 +1,16 @@
 package cz.petrbalat.klib.spring.jwt.mvc
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import cz.petrbalat.klib.spring.jwt.HEADER_STRING
 import cz.petrbalat.klib.spring.jwt.TOKEN_PREFIX
-import io.jsonwebtoken.Jwts
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
-import org.springframework.security.core.Authentication
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.core.userdetails.UserDetails
-import org.springframework.web.filter.OncePerRequestFilter
-import toKey
-import java.net.URLDecoder
+import cz.petrbalat.klib.spring.jwt.util.JwtUtil
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.web.filter.OncePerRequestFilter
+import java.net.URLDecoder
 
 /**
  * validate requests containing JWTS
@@ -21,12 +18,8 @@ import jakarta.servlet.http.HttpServletResponse
  * @see https://auth0.com/blog/implementing-jwt-authentication-on-spring-boot/
  */
 open class JWTAuthorizationFilter(
-    private val secret: String,
-    private val mapper: ObjectMapper,
-    private val clazz: Class<UserDetails>
+    private val jwtUtil: JwtUtil,
 ) : OncePerRequestFilter() {
-
-    private val deserializer = JacksonDeserializer(mapper)
 
     override fun doFilterInternal(req: HttpServletRequest, res: HttpServletResponse, chain: FilterChain) {
         fun readFromCookie() =
@@ -55,13 +48,7 @@ open class JWTAuthorizationFilter(
 
     private fun getAuthentication(claimJws: String): Authentication? {
         // parse the token.
-        val subject: String = Jwts.parserBuilder().setSigningKey(secret.toKey())
-            .deserializeJsonWith(deserializer)
-            .build()
-            .parseClaimsJws(claimJws)
-            .body?.subject ?: return null
-
-        val user: UserDetails = mapper.readValue(subject, clazz)
+        val user = jwtUtil.getUserFromToken(claimJws) ?: return null
         return UsernamePasswordAuthenticationToken(user, null, user.authorities)
     }
 

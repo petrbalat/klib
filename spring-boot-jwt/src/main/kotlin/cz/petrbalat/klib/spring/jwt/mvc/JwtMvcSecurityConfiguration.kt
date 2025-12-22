@@ -1,13 +1,13 @@
 package cz.petrbalat.klib.spring.jwt.mvc
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import cz.petrbalat.klib.spring.jwt.util.JwtUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.core.userdetails.UserDetails
 import java.time.Duration
@@ -46,10 +46,18 @@ class JwtMvcSecurityConfiguration(
 
     @Bean
     @ConditionalOnMissingBean
-    fun jwtAuthorizationFilter(@Value("\${jwt.token.class}") clazz: Class<UserDetails>): JWTAuthorizationFilter {
+    fun jwtAuthorizationFilter(util: JwtUtil): JWTAuthorizationFilter {
         logger.info("creating default JWTAuthorizationFilter")
-        return JWTAuthorizationFilter(secret, mapper, clazz)
+        return JWTAuthorizationFilter(util)
     }
+
+    @Bean
+    fun jwtUtil(
+        @Value("\${jwt.token.secret}") secret: String,
+        @Value("\${jwt.token.class}") tokenClass: Class<UserDetails>,
+        @Value("\${jwt.token.expirationDateTime:#{null}}") expirationDateTime: Duration?,
+        mapper: ObjectMapper,
+    ) = JwtUtil(secret, tokenClass, expirationDateTime, mapper)
 
 }
 

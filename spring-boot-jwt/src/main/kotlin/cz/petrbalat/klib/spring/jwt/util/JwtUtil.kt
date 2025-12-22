@@ -20,10 +20,14 @@ class JwtUtil(
     private val mapper: ObjectMapper,
 ) {
 
-    private var key: Key = Keys.hmacShaKeyFor(secret.toByteArray())
+    private val key: Key = Keys.hmacShaKeyFor(secret.toByteArray())
+
+    private val jwtParser = Jwts.parserBuilder()
+        .setSigningKey(key)
+        .build()
 
     fun getAllClaimsFromToken(token: String): Claims =
-        Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).body
+        jwtParser.parseClaimsJws(token).body
 
     fun getUserFromToken(token: String): UserDetails {
         val subject = getAllClaimsFromToken(token).subject
@@ -38,7 +42,6 @@ class JwtUtil(
         return doGenerateToken(claims, user)
     }
 
-
     private fun isTokenExpired(token: String): Boolean {
         val expiration: Date = getExpirationDateFromToken(token)
         return expiration.before(Date())
@@ -47,6 +50,7 @@ class JwtUtil(
     private fun doGenerateToken(claims: Map<String, Any?>, user: UserDetails): String {
         val duration: Duration = expirationDateTime ?: Duration.ofDays(7)
         val expirationDate = now.plus(duration).toDate()
+
         return Jwts.builder()
             .setClaims(claims)
             .setSubject(mapper.writeValueAsString(user))
@@ -56,6 +60,6 @@ class JwtUtil(
             .compact()
     }
 
-    fun validateToken(token: String): Boolean = !isTokenExpired(token)
+    fun validateToken(token: String): Boolean = runCatching { !isTokenExpired(token) }.getOrDefault(false)
 
 }
