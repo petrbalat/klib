@@ -17,7 +17,6 @@ include(
     "spring-boot-graphql",
     "spring-boot-jwt",
     "spring-boot-web",
-    "spring-boot-webflux",
     "spring-boot-mail",
     "spring-boot-image",
     "geom",
