@@ -7,7 +7,7 @@ interface ImageService {
 
     val baseUrl: String
 
-    suspend fun uploadImage(
+    fun uploadImage(
         stream: InputStream, // uri of image. can by http(s):// or file:/
         name: String,
         directory: String, // destination directory
@@ -19,7 +19,7 @@ interface ImageService {
     /**
      * return url
      */
-    suspend fun upload(
+    fun upload(
         stream: InputStream,
         name: String,
         directory: String, // destination directory
@@ -29,7 +29,7 @@ interface ImageService {
     /**
      * without resize
      */
-    suspend fun toWebpAndUploadImage(
+    fun toWebpAndUploadImage(
         stream: InputStream,
         name: String, // file name
         directory: String, // destination directory

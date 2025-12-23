@@ -19,7 +19,7 @@ class FileSystemImageService(
     override val baseUrl: String,
 ) : ImageService {
 
-    override suspend fun uploadImage(
+    override fun uploadImage(
         stream: InputStream,
         name: String,
         directory: String,
@@ -62,7 +62,7 @@ class FileSystemImageService(
         return ImageDto("$baseUrl/${dto.name}", webpUrl = "$baseUrl/${webpFile.name}")
     }
 
-    override suspend fun upload(stream: InputStream, name: String, directory: String, override: Boolean): String {
+    override fun upload(stream: InputStream, name: String, directory: String, override: Boolean): String {
         val destination: Path = createDestinationDirIfNotExist(directory)
         val file: Path = destination / name
 
@@ -75,7 +75,7 @@ class FileSystemImageService(
         return "$baseUrl/$directory/$name"
     }
 
-    override suspend fun toWebpAndUploadImage(
+    override fun toWebpAndUploadImage(
         stream: InputStream,
         name: String, // file name
         directory: String, // destination directory

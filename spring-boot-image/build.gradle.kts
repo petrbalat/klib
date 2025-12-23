@@ -26,6 +26,7 @@ dependencies {
 
 	api(project(":jdk"))
 	api(project(":ftp"))
+	compileOnly(project(":spring-boot-web"))
 	api("org.imgscalr:imgscalr-lib:4.2")
 	api("org.sejda.imageio:webp-imageio:0.1.6")
 

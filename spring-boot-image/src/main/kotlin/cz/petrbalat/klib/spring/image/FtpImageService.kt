@@ -24,7 +24,7 @@ class FtpImageService(
 
     private val logger = LoggerFactory.getLogger(javaClass)
 
-    override suspend fun uploadImage(
+    override fun uploadImage(
         stream: InputStream,
         name: String,
         directory: String,
@@ -63,7 +63,7 @@ class FtpImageService(
         return ImageDto("$baseUrl/$fileName", webpUrl = "$baseUrl/$webFileName")
     }
 
-    override suspend fun upload(stream: InputStream, name: String, directory: String, override: Boolean): String {
+    override fun upload(stream: InputStream, name: String, directory: String, override: Boolean): String {
         useFtpClient(directory) { client ->
             directory.split("/").forEach { dir ->
                 logger.info("makeDirectory ${client.makeDirectory(dir)}")
@@ -86,7 +86,7 @@ class FtpImageService(
         return "$baseUrl/$directory/$name"
     }
 
-    override suspend fun toWebpAndUploadImage(
+    override fun toWebpAndUploadImage(
         stream: InputStream,
         name: String,
         directory: String,
