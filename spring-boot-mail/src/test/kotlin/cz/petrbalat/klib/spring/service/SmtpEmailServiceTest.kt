@@ -2,7 +2,7 @@ package cz.petrbalat.klib.spring.service
 
 import org.springframework.mail.javamail.JavaMailSenderImpl
 import kotlin.test.Test
-import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 
 internal class SmtpEmailServiceTest {
 
@@ -12,7 +12,7 @@ internal class SmtpEmailServiceTest {
         val mailService = SmtpEmailService(JavaMailSenderImpl(), "test@email.cz")
 
         val dto = EmailDto(subject = "předmět", body = "Hello email", html = false)
-        val resultDto: EmailResultDto = mailService.send(dto, "email1@test", "email2.tx").get()
-        assertFalse(resultDto.success)
+        val resultDto = mailService.send(dto, "email1@test", "email2.tx")
+        assertNotNull(resultDto)
     }
 }

@@ -17,5 +17,3 @@ data class EmailDto(
 )
 
 data class EmailAttachment(val name: String, val stream: InputStreamSource)
-
-data class EmailResultDto(val success: Boolean, val error: Throwable? = null)
