@@ -13,7 +13,7 @@ repositories {
 }
 
 plugins {
-    id("org.springframework.boot") version "3.4.13" apply false
+    id("org.springframework.boot") version "3.5.9" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
     kotlin("jvm") version "2.3.0" apply false
     kotlin("plugin.spring") version "2.3.0" apply false
@@ -21,7 +21,7 @@ plugins {
 
 allprojects {
     group = "io.github.petrbalat"
-    version = "1.3.7"
+    version = "1.4.0"
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "21"
