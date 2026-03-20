@@ -19,7 +19,7 @@ dependencies {
 //	compileOnly(kotlin("kotlin-reflect"))
 	implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
 	implementation("org.springframework.boot:spring-boot-starter")
-	compileOnly("com.fasterxml.jackson.core:jackson-databind")
+	compileOnly("tools.jackson.core:jackson-databind")
 
 	compileOnly("org.springframework:spring-web")
 	compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")

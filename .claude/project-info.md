@@ -2,7 +2,7 @@
 
 ## Základní informace
 - **Název**: klib
-- **Verze**: 1.4.0
+- **Verze**: 2.0.0
 - **Typ**: Multi-modul Kotlin/Spring Boot knihovna
 - **Repository**: https://github.com/petrbalat/klib
 - **Autor**: Petr Balát (petrbalat)
@@ -10,10 +10,13 @@
 ## Technologie
 - **Kotlin**: 2.3.0
 - **Java**: 21 (source & target compatibility)
-- **Spring Boot**: 3.5.9
-- **Gradle**: 8.12 (Kotlin DSL)
+- **Spring Boot**: 4.0.0
+- **Spring Framework**: 7.x
+- **Spring Security**: 7.x (s lambda DSL)
+- **Gradle**: 8.14.4 (Kotlin DSL)
 - **Kotlinx Coroutines**: 1.6.4
 - **Build system**: Gradle s Kotlin DSL
+- **Jakarta EE**: 11 (Servlet 6.1)
 
 ## Struktura modulů
 
@@ -150,7 +153,18 @@ Retrofit2 interceptors
 
 ## Historie verzí (poslední změny)
 
-### 1.4.0 (current)
+### 2.0.0 (current) - BREAKING CHANGES
+- **Spring Boot 4.0.0** upgrade
+- **Spring Framework 7.x** a **Spring Security 7.x**
+- **Gradle 8.14.4** upgrade
+- **Jakarta EE 11** (Servlet 6.1)
+- **GraphQL**: package změna z `o.s.b.autoconfigure.graphql` → `o.s.b.graphql.autoconfigure`
+- **Security**: Lambda DSL syntax pro konfiguraci (`.exceptionHandling { }` místo `.exceptionHandling()`)
+- **Security**: AuthenticationSuccessHandler s FilterChain parametrem
+- **Web**: ModelAndView null-safety improvements
+- **Test**: Migration z WebFlux na MVC v testech
+
+### 1.4.0
 - Spring Boot 3.5.9 upgrade
 
 ### 1.3.7

@@ -13,15 +13,23 @@ repositories {
 }
 
 plugins {
-    id("org.springframework.boot") version "3.5.9" apply false
+    id("org.springframework.boot") version "4.0.7" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
-    kotlin("jvm") version "2.3.0" apply false
-    kotlin("plugin.spring") version "2.3.0" apply false
+    kotlin("jvm") version "2.4.0" apply false
+    kotlin("plugin.spring") version "2.4.0" apply false
 }
 
 allprojects {
     group = "io.github.petrbalat"
-    version = "1.4.1"
+    version = "2.0.5"
+
+    plugins.withType<JavaBasePlugin> {
+        extensions.configure<JavaPluginExtension> {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(25)
+            }
+        }
+    }
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "25"
@@ -30,7 +38,7 @@ allprojects {
 
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
-            freeCompilerArgs.addAll("-Xjsr305=strict", "-Xjvm-default=all", "-progressive")
+            freeCompilerArgs.addAll("-Xjsr305=strict", "-Xannotation-default-target=param-property")
             jvmTarget.set(JvmTarget.JVM_25)
         }
     }

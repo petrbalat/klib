@@ -1,6 +1,5 @@
 package cz.petrbalat.klib.spring.jwt.util
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import cz.petrbalat.klib.jdk.datetime.now
 import cz.petrbalat.klib.jdk.datetime.toDate
 import io.jsonwebtoken.Claims
@@ -8,6 +7,7 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.security.Keys
 import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
+import tools.jackson.databind.json.JsonMapper
 import java.security.Key
 import java.time.Duration
 import java.util.*
@@ -17,7 +17,7 @@ class JwtUtil(
     secret: String,
     private val tokenClass: Class<UserDetails>,
     private val expirationDateTime: Duration?,
-    private val mapper: ObjectMapper,
+    private val mapper: JsonMapper,
 ) {
 
     private val key: Key = Keys.hmacShaKeyFor(secret.toByteArray())
