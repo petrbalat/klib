@@ -2,17 +2,18 @@ package cz.petrbalat.klib.spring.jwt.mvc
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import cz.petrbalat.klib.spring.jwt.util.JwtUtil
+import jakarta.servlet.Servlet
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.core.userdetails.UserDetails
+import tools.jackson.databind.json.JsonMapper
 import java.time.Duration
-import jakarta.servlet.Servlet
-import org.springframework.boot.autoconfigure.AutoConfiguration
 
 
 /**
@@ -23,7 +24,7 @@ import org.springframework.boot.autoconfigure.AutoConfiguration
 @ConditionalOnClass(Servlet::class)
 class JwtMvcSecurityConfiguration(
     private @Value("\${jwt.token.secret}") val secret: String,
-    private val mapper: ObjectMapper,
+    private val mapper: JsonMapper,
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -56,7 +57,7 @@ class JwtMvcSecurityConfiguration(
         @Value("\${jwt.token.secret}") secret: String,
         @Value("\${jwt.token.class}") tokenClass: Class<UserDetails>,
         @Value("\${jwt.token.expirationDateTime:#{null}}") expirationDateTime: Duration?,
-        mapper: ObjectMapper,
+        mapper: JsonMapper,
     ) = JwtUtil(secret, tokenClass, expirationDateTime, mapper)
 
 }
