@@ -21,7 +21,15 @@ plugins {
 
 allprojects {
     group = "io.github.petrbalat"
-    version = "2.0.2"
+    version = "2.0.4"
+
+    plugins.withType<JavaBasePlugin> {
+        extensions.configure<JavaPluginExtension> {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(25)
+            }
+        }
+    }
 
     tasks.withType<JavaCompile> {
         sourceCompatibility = "25"
