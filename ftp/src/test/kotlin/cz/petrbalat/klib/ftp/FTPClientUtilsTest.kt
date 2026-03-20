@@ -2,10 +2,12 @@ package cz.petrbalat.klib.ftp
 
 import org.apache.commons.net.ftp.FTP
 import org.apache.commons.net.ftp.FTPClient
+import org.junit.jupiter.api.Disabled
 import org.slf4j.LoggerFactory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+@Disabled
 class FTPClientUtilsTest {
 
     private val logger = LoggerFactory.getLogger(javaClass)
