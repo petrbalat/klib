@@ -3,12 +3,14 @@ package cz.petrbalat.klib.spring.jwt.mvc
 /**
  * @see https://auth0.com/blog/implementing-jwt-authentication-on-spring-boot/
  */
-import com.fasterxml.jackson.databind.ObjectMapper
 import cz.petrbalat.klib.jdk.datetime.now
 import cz.petrbalat.klib.jdk.datetime.toDate
 import cz.petrbalat.klib.spring.jwt.HEADER_STRING
 import cz.petrbalat.klib.spring.jwt.TOKEN_PREFIX
 import io.jsonwebtoken.Jwts
+import jakarta.servlet.FilterChain
+import jakarta.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
@@ -16,11 +18,9 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import toKey
+import tools.jackson.databind.json.JsonMapper
 import java.time.Duration
 import java.util.*
-import jakarta.servlet.FilterChain
-import jakarta.servlet.http.HttpServletRequest
-import jakarta.servlet.http.HttpServletResponse
 
 /**
  * Přihlášení
@@ -36,7 +36,7 @@ import jakarta.servlet.http.HttpServletResponse
  * }
  */
 open class JWTAuthenticationFilter(private @Value("\${jwt.token.secret}") val secret: String,
-                                   private val mapper: ObjectMapper,
+                                   private val mapper: JsonMapper,
                                    private val managerBulder: AuthenticationManagerBuilder,
                                    val expirationDateTime: Duration,
                                    private val userPrepare: PrepareUserToJson<UserDetails>?) : UsernamePasswordAuthenticationFilter() {
