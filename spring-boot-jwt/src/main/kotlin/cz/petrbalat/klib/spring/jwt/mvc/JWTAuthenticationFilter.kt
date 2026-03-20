@@ -47,7 +47,7 @@ open class JWTAuthenticationFilter(private @Value("\${jwt.token.secret}") val se
         //HACK
     }
 
-    override fun attemptAuthentication(req: HttpServletRequest, res: HttpServletResponse?): Authentication {
+    override fun attemptAuthentication(req: HttpServletRequest, res: HttpServletResponse): Authentication {
         val (username: String, password: String) = mapper.readValue(req.inputStream, LoginUserDto::class.java)
         val token = UsernamePasswordAuthenticationToken(username, password)
         if (authenticationManager == null) {
@@ -56,7 +56,7 @@ open class JWTAuthenticationFilter(private @Value("\${jwt.token.secret}") val se
         return authenticationManager.authenticate(token)
     }
 
-    override fun successfulAuthentication(req: HttpServletRequest, res: HttpServletResponse, chain: FilterChain?,
+    override fun successfulAuthentication(req: HttpServletRequest, res: HttpServletResponse, chain: FilterChain,
                                           auth: Authentication) {
 
         val user = auth.principal as UserDetails

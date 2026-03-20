@@ -13,8 +13,10 @@ internal fun String.toKey(): SecretKey {
     return Keys.hmacShaKeyFor(toByteArray)
 }
 
-fun HttpSecurity.addExceptionHandling() = exceptionHandling().authenticationEntryPoint { _, response, _ ->
-    response?.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")
+fun HttpSecurity.addExceptionHandling() = exceptionHandling { exh ->
+    exh.authenticationEntryPoint { _, response, _ ->
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized")
+    }
 }
 
 
