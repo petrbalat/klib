@@ -21,17 +21,17 @@ plugins {
 
 allprojects {
     group = "io.github.petrbalat"
-    version = "2.0.2"
+    version = "2.0.3"
 
     tasks.withType<JavaCompile> {
-        sourceCompatibility = "21"
-        targetCompatibility = "21"
+        sourceCompatibility = "25"
+        targetCompatibility = "25"
     }
 
     tasks.withType<KotlinCompile>().configureEach {
         compilerOptions {
             freeCompilerArgs.addAll("-Xjsr305=strict", "-Xjvm-default=all", "-progressive")
-            jvmTarget.set(JvmTarget.JVM_21)
+            jvmTarget.set(JvmTarget.JVM_25)
         }
     }
 
