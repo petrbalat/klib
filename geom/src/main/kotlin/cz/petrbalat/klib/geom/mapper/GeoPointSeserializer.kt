@@ -1,18 +1,18 @@
 package cz.petrbalat.klib.geom.mapper
 
-import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.databind.JsonSerializer
-import com.fasterxml.jackson.databind.SerializerProvider
 import cz.petrbalat.klib.geom.GeoPoint
 import cz.petrbalat.klib.geom.lat
 import cz.petrbalat.klib.geom.lon
 import org.geolatte.geom.Point
+import tools.jackson.core.JsonGenerator
+import tools.jackson.databind.SerializationContext
+import tools.jackson.databind.ValueSerializer
 
 /**
  * Created by Petr balat
  */
-class GeoPointSeserializer : JsonSerializer<Point<*>>() {
-    override fun serialize(value: Point<*>?, json: JsonGenerator, serializers: SerializerProvider?) {
+class GeoPointSeserializer : ValueSerializer<Point<*>>() {
+    override fun serialize(value: Point<*>?, json: JsonGenerator, serializers: SerializationContext?) {
         val geo = value as? GeoPoint
         if (geo == null) {
             json.writeNull()
@@ -20,8 +20,8 @@ class GeoPointSeserializer : JsonSerializer<Point<*>>() {
         }
 
         json.writeStartObject()
-        json.writeNumberField("lat", geo.lat)
-        json.writeNumberField("lon", geo.lon)
+        json.writeNumberProperty("lat", geo.lat)
+        json.writeNumberProperty("lon", geo.lon)
         json.writeEndObject()
     }
 }

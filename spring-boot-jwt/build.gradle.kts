@@ -22,7 +22,7 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-security")
 	compileOnly("org.springframework.boot:spring-boot-starter-web")
 
-	implementation("com.fasterxml.jackson.core:jackson-databind")
+	implementation("tools.jackson.core:jackson-databind")
 
 	//	jwt
 	implementation("io.jsonwebtoken:jjwt-api:0.11.5")

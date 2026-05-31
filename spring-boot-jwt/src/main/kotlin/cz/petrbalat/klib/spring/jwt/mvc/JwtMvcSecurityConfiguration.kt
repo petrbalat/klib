@@ -1,6 +1,5 @@
 package cz.petrbalat.klib.spring.jwt.mvc
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import cz.petrbalat.klib.spring.jwt.util.JwtUtil
 import jakarta.servlet.Servlet
 import org.slf4j.LoggerFactory

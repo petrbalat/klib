@@ -1,6 +1,6 @@
 package cz.petrbalat.klib.geom.mapper
 
-import com.fasterxml.jackson.databind.module.SimpleModule
+import tools.jackson.databind.module.SimpleModule
 import org.geolatte.geom.Point
 
 class GeoPointModule : SimpleModule() {
