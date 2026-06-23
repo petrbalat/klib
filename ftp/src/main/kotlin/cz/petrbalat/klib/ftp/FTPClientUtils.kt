@@ -1,6 +1,5 @@
 package cz.petrbalat.klib.ftp
 
-import cz.petrbalat.klib.jdk.tryOrNull
 import org.apache.commons.net.ftp.FTPClient
 import org.apache.commons.net.ftp.FTPReply
 import org.slf4j.Logger
@@ -9,9 +8,9 @@ import java.util.concurrent.TimeUnit
 private inline fun <T> FTPClient.useConnection(block: (FTPClient) -> Unit): T? = try {
     block(this) as T
 } finally {
-    tryOrNull {
+    runCatching {
         this.disconnect()
-    }
+    }.getOrNull()
 }
 
 fun <T> FTPClient.use(

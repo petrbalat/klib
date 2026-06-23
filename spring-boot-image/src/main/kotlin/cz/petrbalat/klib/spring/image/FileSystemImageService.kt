@@ -1,7 +1,6 @@
 package cz.petrbalat.klib.spring.image
 
 import cz.petrbalat.klib.jdk.io.allPermission
-import cz.petrbalat.klib.jdk.tryOrNull
 import cz.petrbalat.klib.spring.image.cwebp.convertToWebP
 import cz.petrbalat.klib.spring.image.image.ReadImageDto
 import cz.petrbalat.klib.spring.image.image.readImageDto
@@ -34,12 +33,12 @@ class FileSystemImageService(
         val file: Path = destination / dto.name
         val webpFile: Path = destination / "${dto.nameWithoutExtension}.webp"
         if (override) {
-            tryOrNull {
+            runCatching {
                 file.deleteIfExists()
-            }
-            tryOrNull {
+            }.getOrNull()
+            runCatching {
                 webpFile.deleteIfExists()
-            }
+            }.getOrNull()
         }
 
         //write origin image
@@ -87,9 +86,9 @@ class FileSystemImageService(
         val webpFile: Path = destination / "${dto.nameWithoutExtension}.webp"
 
         if (override) {
-            tryOrNull {
+            runCatching {
                 webpFile.deleteIfExists()
-            }
+            }.getOrNull()
         }
 
         //write webp

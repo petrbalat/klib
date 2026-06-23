@@ -1,7 +1,6 @@
 package cz.petrbalat.klib.spring.image
 
 import cz.petrbalat.klib.ftp.use
-import cz.petrbalat.klib.jdk.tryOrNull
 import cz.petrbalat.klib.spring.image.cwebp.convertToWebP
 import cz.petrbalat.klib.spring.image.image.ReadImageDto
 import cz.petrbalat.klib.spring.image.image.readImageDto
@@ -46,12 +45,12 @@ class FtpImageService(
         // upload origin
         useFtpClient(directory) { client ->
             if (override) {
-                tryOrNull {
+                runCatching {
                     client.deleteFile(fileName)
-                }
-                tryOrNull {
+                }.getOrNull()
+                runCatching {
                     client.deleteFile(webFileName)
-                }
+                }.getOrNull()
             }
 
             //upload origin image
@@ -73,9 +72,9 @@ class FtpImageService(
             }
 
             if (override) {
-                tryOrNull {
+                runCatching {
                     client.deleteFile(name)
-                }
+                }.getOrNull()
             }
 
             stream.use {
@@ -102,9 +101,9 @@ class FtpImageService(
         // upload origin
         useFtpClient(directory) { client ->
             if (override) {
-                tryOrNull {
+                runCatching {
                     client.deleteFile(webFileName)
-                }
+                }.getOrNull()
             }
 
             //upload origin image

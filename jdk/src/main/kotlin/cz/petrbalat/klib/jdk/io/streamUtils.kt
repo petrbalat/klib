@@ -3,7 +3,6 @@ package cz.petrbalat.klib.jdk.io
 import cz.petrbalat.klib.jdk.string.randomString
 import cz.petrbalat.klib.jdk.string.removeDiakritiku
 import cz.petrbalat.klib.jdk.string.removeNotAlowedInFileName
-import cz.petrbalat.klib.jdk.tryOrNull
 import java.io.*
 import java.nio.charset.Charset
 import java.nio.file.Files
@@ -32,9 +31,9 @@ fun InputStream.copyTo(
         if (it.exists()) File(path, "${randomString(4).lowercase()}-$pathPrepend$origName") else it
     }
     assert(uploadFile.createNewFile())
-    tryOrNull {
+    runCatching {
         Files.setPosixFilePermissions(uploadFile.toPath(), perms)
-    }
+    }.getOrNull()
     FileOutputStream(uploadFile, false).use {
         this.use { inputStream ->
             inputStream.copyTo(it)

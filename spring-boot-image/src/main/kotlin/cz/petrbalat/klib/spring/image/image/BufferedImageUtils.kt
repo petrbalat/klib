@@ -1,6 +1,5 @@
 package cz.petrbalat.klib.spring.image.image
 
-import cz.petrbalat.klib.jdk.tryOrNull
 import org.imgscalr.Scalr
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
@@ -19,9 +18,9 @@ fun BufferedImage.resizeImage(
 
 fun BufferedImage.writeToStream(extension: String) = ByteArrayOutputStream().also { stream ->
     val extension = if (extension.lowercase() == "jpg") "jpeg" else extension
-    fun findOrNull(type: String) = tryOrNull {
+    fun findOrNull(type: String) = runCatching {
         ImageIO.getImageWritersByMIMEType(type).next()
-    }
+    }.getOrNull()
 
     val writer: ImageWriter = findOrNull("image/$extension") ?: findOrNull("image/png")!!
     writer.output = MemoryCacheImageOutputStream(stream)

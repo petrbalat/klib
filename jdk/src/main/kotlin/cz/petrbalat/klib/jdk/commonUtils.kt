@@ -14,13 +14,7 @@ fun Throwable.causeSequence(): Sequence<Throwable> = generateSequence(this) {
     it.cause
 }
 
-@Deprecated("use tryOrNull", ReplaceWith(expression = "tryOrNull(action)", "cz.petrbalat.klib.jdk.tryOrNull"))
-inline fun <T> tryOn(action: () -> T?): T? = try {
-    action()
-} catch (ex: Throwable) {
-    null
-}
-
+@Deprecated("use runCatching", ReplaceWith(expression = "runCatching(action)", "kotlin.runCatching"))
 inline fun <T> tryOrNull(action: () -> T?): T? = try {
     action()
 } catch (ex: Throwable) {

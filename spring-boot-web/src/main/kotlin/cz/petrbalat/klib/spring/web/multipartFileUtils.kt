@@ -3,7 +3,6 @@ package cz.petrbalat.klib.spring.web
 import cz.petrbalat.klib.jdk.io.permsDefault
 import cz.petrbalat.klib.jdk.io.pureFileName
 import cz.petrbalat.klib.jdk.string.randomString
-import cz.petrbalat.klib.jdk.tryOrNull
 import org.springframework.web.multipart.MultipartFile
 import java.io.File
 import java.nio.file.Files
@@ -46,9 +45,9 @@ fun MultipartFile.copyTo(
         } else it
     }
     this.transferTo(destFile)
-    tryOrNull {
+    runCatching {
         Files.setPosixFilePermissions(destFile.toPath(), perms)
-    }
+    }.getOrNull()
 
     return destFile.name
 }
