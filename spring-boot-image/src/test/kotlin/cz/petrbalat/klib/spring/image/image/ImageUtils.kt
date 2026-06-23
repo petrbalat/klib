@@ -14,7 +14,7 @@ class ImageUtils {
     @Test
     fun testReadImage() = runBlocking {
         val image: BufferedImage = testJpgFile.readImage()
-        assertEquals(1, image.type)
+        assertEquals(5, image.type)
     }
 
     @Test

@@ -3,13 +3,14 @@ package cz.petrbalat.klib.spring.image
 import cz.petrbalat.klib.cdn77.testJpg
 import cz.petrbalat.klib.jdk.http.fetchStream
 import kotlinx.coroutines.runBlocking
-import kotlin.io.path.Path
+import kotlin.io.path.createTempDirectory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 internal class FileSystemImageServiceTest {
 
-    private var service = FileSystemImageService(Path("c:\\home\\easyrent\\resources"), "/resources")
+    private val tempDir = createTempDirectory("klib-image-test")
+    private var service = FileSystemImageService(tempDir, "/resources")
 
     @Test
     fun uploadImage() = runBlocking {

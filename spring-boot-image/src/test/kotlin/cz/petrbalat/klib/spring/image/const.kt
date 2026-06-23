@@ -4,6 +4,5 @@ import java.io.File
 import java.net.URI
 
 
-val testPng = URI("file:///test.png")
-val testJpg = URI("file:///test.jpg")
+val testJpg: URI = object {}.javaClass.getResource("/test.jpg")!!.toURI()
 val testJpgFile = File(testJpg)
