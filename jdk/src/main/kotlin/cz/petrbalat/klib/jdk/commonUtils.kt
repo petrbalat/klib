@@ -14,13 +14,6 @@ fun Throwable.causeSequence(): Sequence<Throwable> = generateSequence(this) {
     it.cause
 }
 
-@Deprecated("use runCatching", ReplaceWith(expression = "runCatching(action)", "kotlin.runCatching"))
-inline fun <T> tryOrNull(action: () -> T?): T? = try {
-    action()
-} catch (ex: Throwable) {
-    null
-}
-
 /**
  * porovnání čísel na 8 desetiných míst
  */
