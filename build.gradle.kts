@@ -13,7 +13,7 @@ repositories {
 }
 
 plugins {
-    id("org.springframework.boot") version "4.0.7" apply false
+    id("org.springframework.boot") version "4.1.0" apply false
     id("io.spring.dependency-management") version "1.1.7" apply false
     kotlin("jvm") version "2.4.0" apply false
     kotlin("plugin.spring") version "2.4.0" apply false
@@ -21,7 +21,7 @@ plugins {
 
 allprojects {
     group = "io.github.petrbalat"
-    version = "2.0.5"
+    version = "2.0.6"
 
     plugins.withType<JavaBasePlugin> {
         extensions.configure<JavaPluginExtension> {
