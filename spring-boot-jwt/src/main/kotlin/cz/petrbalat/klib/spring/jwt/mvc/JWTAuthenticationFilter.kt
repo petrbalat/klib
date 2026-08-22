@@ -12,12 +12,14 @@ import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import toKey
+import tools.jackson.core.JacksonException
 import tools.jackson.databind.json.JsonMapper
 import java.time.Duration
 import java.util.*
@@ -48,7 +50,12 @@ open class JWTAuthenticationFilter(private @Value("\${jwt.token.secret}") val se
     }
 
     override fun attemptAuthentication(req: HttpServletRequest, res: HttpServletResponse): Authentication {
-        val (username: String, password: String) = mapper.readValue(req.inputStream, LoginUserDto::class.java)
+        // nevalidní tělo (typicky boti posílající form-data) nesmí skončit jako 500, ale jako neúspěšné přihlášení
+        val (username: String, password: String) = try {
+            mapper.readValue(req.inputStream, LoginUserDto::class.java)
+        } catch (ex: JacksonException) {
+            throw BadCredentialsException("Nevalidní tělo přihlašovacího požadavku", ex)
+        }
         val token = UsernamePasswordAuthenticationToken(username, password)
         if (authenticationManager == null) {
             authenticationManager = managerBulder.orBuild
