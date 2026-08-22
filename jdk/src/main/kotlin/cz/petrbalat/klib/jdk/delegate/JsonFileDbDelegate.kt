@@ -6,6 +6,8 @@ import java.io.BufferedWriter
 import java.io.File
 import java.io.Reader
 import java.io.Writer
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import kotlin.reflect.KProperty
 
 class JsonFileDbDelegate<T>(private val clazz: Class<T>,
@@ -51,19 +53,27 @@ class JsonFileDbDelegate<T>(private val clazz: Class<T>,
                 deserialize(it)
             } catch (th: Throwable) {
                 logger.error("Chyba při deserializaci db ${clazz.name}", th)
-                clazz.getDeclaredConstructor().newInstance()
+                emptyInstance()
             }
         }
     }
 
+    //pole nemá bezparametrický konstruktor, na rozdíl od POJO musí vzniknout přes Array.newInstance
+    @Suppress("UNCHECKED_CAST")
+    private fun emptyInstance(): T =
+        if (clazz.isArray) java.lang.reflect.Array.newInstance(clazz.componentType, 0) as T
+        else clazz.getDeclaredConstructor().newInstance()
+
     operator fun setValue(thisRef: Any?, property: KProperty<*>, value: T) {
         synchronized(lock) {
-            dbFile.bufferedWriter().use { writer: BufferedWriter ->
-                try {
-                    serialize(value, writer)
-                } catch (th: Throwable) {
-                    logger.error("Chyba při serializaci db ${clazz.name}", th)
-                }
+            //zápis přes dočasný soubor + atomic move, aby výpadek uprostřed zápisu neponechal poškozený dbFile
+            val tmpFile = File(dbFile.parentFile, "$dbName.tmp")
+            try {
+                tmpFile.bufferedWriter().use { writer: BufferedWriter -> serialize(value, writer) }
+                Files.move(tmpFile.toPath(), dbFile.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+            } catch (th: Throwable) {
+                logger.error("Chyba při serializaci db ${clazz.name}", th)
+                tmpFile.delete()
             }
         }
     }
