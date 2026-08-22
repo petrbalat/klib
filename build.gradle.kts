@@ -21,7 +21,7 @@ plugins {
 
 allprojects {
     group = "io.github.petrbalat"
-    version = "2.0.7"
+    version = "2.0.8"
 
     plugins.withType<JavaBasePlugin> {
         extensions.configure<JavaPluginExtension> {

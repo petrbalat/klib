@@ -12,7 +12,7 @@ tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar
 
 dependencies {
     compileOnly(kotlin("stdlib"))
-    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
+    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
 //    implementation(kotlin("reflect"))
 
     implementation(project(":jdk"))
@@ -20,7 +20,7 @@ dependencies {
     compileOnly("org.slf4j:slf4j-api")
 
     testImplementation("org.slf4j:slf4j-api")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
     testImplementation("commons-net:commons-net:3.8.0")
     testImplementation("org.junit.jupiter:junit-jupiter")
     testImplementation(kotlin("test-junit5"))

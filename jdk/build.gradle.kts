@@ -13,14 +13,14 @@ tasks.getByName<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar
 
 dependencies {
     implementation(kotlin("stdlib"))
-    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
+    compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
 //    implementation(kotlin("reflect"))
 
     compileOnly("tools.jackson.core:jackson-databind")
     compileOnly("org.slf4j:slf4j-api")
 
     testImplementation("org.slf4j:slf4j-api")
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8:${KlibVersions.coroutines}")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
     testImplementation("tools.jackson.core:jackson-databind")
     testImplementation("tools.jackson.module:jackson-module-kotlin")
     testImplementation("org.junit.jupiter:junit-jupiter")
