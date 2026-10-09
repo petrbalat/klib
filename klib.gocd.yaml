@@ -36,6 +36,12 @@ pipelines:
                 source: "**/build/test-results"
                 destination: test-results
             tasks:
+            # dockerTest se bez Dockeru tiše přeskočí — v CI radši spadnout, než zelený build bez Linux testů
+            - exec:
+                command: docker
+                arguments:
+                - info
+                run_if: passed
             # check = test všech modulů + dockerTest (Linux testy spring-boot-process)
             - exec:
                 command: sh

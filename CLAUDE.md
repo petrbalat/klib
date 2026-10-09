@@ -26,6 +26,7 @@ Publikace čte token z `ossrhPassword` v `gradle.properties` (v gitignore, není
 ### Graf závislostí modulů
 - **`jdk`** — základní čistě JVM utility (datetime, collections, io, http, delegate cache, math, string, ssl, xml). Skoro všechny závislosti jsou `compileOnly` (coroutines, jackson, slf4j), aby si konzumenti přinesli vlastní verze. Většina Spring modulů závisí na `jdk`.
 - Spring moduly (`spring-boot-web`, `spring-boot-jwt`, `spring-boot-mail`, `spring-boot-image`, `spring-boot-graphql`) — každý závisí na `:jdk` plus na příslušném Spring starteru.
+- `spring-boot-process` — správa externích procesů (watchdog, skupiny s tagem, úklid sirotků, `runProcess`, `IntervalScheduler`, Kotlin DSL) + autokonfigurace `klib.process.*`. Nezávisí na `jdk`. Linux testy běží v kontejneru: `./gradlew :spring-boot-process:dockerTest` (`buildSrc/.../dockerTest.kt`, `registerDockerTest()`), viz `spring-boot-process/README.md`.
 - Samostatné moduly — `geom` (PostGIS / lat-long + Jackson serializery), `retrofit2` (interceptory), `pdf`, `qr`, `ftp`.
 
 ### Konvence, které dodržuje každý modul (vzorem je `jdk/build.gradle.kts`)

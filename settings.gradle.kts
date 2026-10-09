@@ -5,6 +5,7 @@ include(
     "spring-boot-web",
     "spring-boot-mail",
     "spring-boot-image",
+    "spring-boot-process",
     "geom",
     "retrofit2",
     "jdk",
