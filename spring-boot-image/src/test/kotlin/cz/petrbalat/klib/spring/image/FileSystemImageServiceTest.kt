@@ -4,6 +4,7 @@ import cz.petrbalat.klib.cdn77.testJpg
 import cz.petrbalat.klib.jdk.http.fetchStream
 import kotlinx.coroutines.runBlocking
 import kotlin.io.path.createTempDirectory
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -13,6 +14,7 @@ internal class FileSystemImageServiceTest {
     private var service = FileSystemImageService(tempDir, "/resources")
 
     @Test
+    @DisabledIfSystemProperty(named = "os.arch", matches = "aarch64|arm64", disabledReason = "webp-imageio nativní knihovna je jen pro x86_64")
     fun uploadImage() = runBlocking {
         val imageDto: ImageDto = service.uploadImage(testJpg, "test", "Test %/*.jpg")
 
@@ -23,6 +25,7 @@ internal class FileSystemImageServiceTest {
     }
 
     @Test
+    @DisabledIfSystemProperty(named = "os.arch", matches = "aarch64|arm64", disabledReason = "webp-imageio nativní knihovna je jen pro x86_64")
     fun toWebpAndUploadImage() = runBlocking {
         val url = service.toWebpAndUploadImage(testJpg.fetchStream(), "test.jpg", "test-dir")
 
