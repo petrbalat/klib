@@ -24,6 +24,8 @@ dependencies {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
 	}
 	testImplementation(kotlin("test-junit5"))
+	testImplementation("org.springframework.boot:spring-boot-starter-restclient")
+	testImplementation(kotlin("reflect"))
 }
 
 val sourcesJar by tasks.registering(Jar::class) {
