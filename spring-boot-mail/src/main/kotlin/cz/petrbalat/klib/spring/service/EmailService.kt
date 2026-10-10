@@ -1,7 +1,9 @@
 package cz.petrbalat.klib.spring.service
 
+import cz.petrbalat.klib.jdk.virtualThreadDispatcher
 import jakarta.mail.internet.InternetAddress
 import jakarta.mail.internet.MimeMessage
+import kotlinx.coroutines.withContext
 import org.slf4j.LoggerFactory
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.mail.javamail.MimeMessageHelper
@@ -33,13 +35,26 @@ open class SmtpEmailService(
             }
         }
 
-        logger.info("Odesílám email(${dto.hashCode()}) $dto k $to")
+        val id = dto.hashCode()
+        logger.info(
+            "Odesílám email($id) '${dto.subject}' od $from k ${to.joinToString()}, " +
+                "příloh ${dto.attachments.count()}, user=${dto.user}, poznámka=${dto.internalNote}"
+        )
         mailSender.send(mimeMessage)
-        logger.info("Email(${dto.hashCode()}) úspěšně odeslán ")
+        logger.info("Email($id) úspěšně odeslán")
     }
 }
 
 interface EmailService {
 
     fun send(dto: EmailDto, vararg to: String): Unit
+
+    /**
+     * Suspend varianta [EmailService.send] — blokující odeslání (Jakarta Mail) proběhne na virtuálním vlákně,
+     * takže neblokuje volající dispatcher.
+     *
+     * Vyžaduje na classpath `kotlinx-coroutines-core` (v knihovně je `compileOnly`).
+     */
+    suspend fun sendSuspend(dto: EmailDto, vararg to: String): Unit =
+        withContext(virtualThreadDispatcher) { send(dto, *to) }
 }

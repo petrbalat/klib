@@ -1,5 +1,6 @@
 package cz.petrbalat.klib.spring.service
 
+import kotlinx.coroutines.runBlocking
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.core.io.ByteArrayResource
@@ -15,7 +16,7 @@ import kotlin.test.assertEquals
  * doručení ověřuje přes jeho REST API. Výsledek je vidět i na http://localhost:8025.
  */
 @SpringBootTest
-internal class SmtpEmailServiceTest(@Autowired mailSender: JavaMailSender) {
+internal class SmtpEmailServiceTest(@Autowired private val mailSender: JavaMailSender) {
 
     private val mailService = SmtpEmailService(mailSender, "test@email.cz", "Klib test")
 
@@ -46,6 +47,23 @@ internal class SmtpEmailServiceTest(@Autowired mailSender: JavaMailSender) {
 
         val message = findMessage(subject)
         assertEquals(1, message["Attachments"])
+    }
+
+    @Test
+    fun sendSuspend(): Unit = runBlocking {
+        var sentOnVirtualThread: Boolean? = null
+        val service = object : SmtpEmailService(mailSender, "test@email.cz") {
+            override fun send(dto: EmailDto, vararg to: String) {
+                sentOnVirtualThread = Thread.currentThread().isVirtual
+                super.send(dto, *to)
+            }
+        }
+
+        val subject = "suspend ${UUID.randomUUID()}"
+        service.sendSuspend(EmailDto(subject = subject, body = "Hello suspend", html = false), "email1@test.cz")
+
+        assertEquals(true, sentOnVirtualThread)
+        findMessage(subject)
     }
 
     /** Najde v mailpitu doručenou zprávu podle předmětu (ověří, že je právě jedna). */

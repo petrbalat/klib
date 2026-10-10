@@ -19,6 +19,7 @@ dependencies {
 	implementation(kotlin("stdlib"))
 
 	implementation("org.springframework.boot:spring-boot-starter-mail")
+	compileOnly("org.jetbrains.kotlinx:kotlinx-coroutines-core") // jen pro sendSuspend
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test") {
 		exclude(group = "org.junit.vintage", module = "junit-vintage-engine")
@@ -26,6 +27,7 @@ dependencies {
 	testImplementation(kotlin("test-junit5"))
 	testImplementation("org.springframework.boot:spring-boot-starter-restclient")
 	testImplementation(kotlin("reflect"))
+	testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core")
 }
 
 val sourcesJar by tasks.registering(Jar::class) {

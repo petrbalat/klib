@@ -1,6 +1,9 @@
 package cz.petrbalat.klib.jdk
 
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.asCoroutineDispatcher
 import java.util.*
+import java.util.concurrent.Executor
 
 /**
  * Created by Petr Balat
@@ -35,3 +38,8 @@ interface Describe {
 }
 
 inline val random get() = kotlin.random.Random
+
+
+/** každá úloha dostane vlastní virtuální vlákno; nic se nezavírá */
+val virtualThreadDispatcher: CoroutineDispatcher =
+    Executor { Thread.startVirtualThread(it) }.asCoroutineDispatcher()
