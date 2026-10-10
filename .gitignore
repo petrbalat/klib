@@ -21,3 +21,6 @@ out/
 /spring-boot-cdn77/test.webp
 /spring-boot-image/push-x.cdn77.com/
 /spring-boot-image/testx.jpg
+
+### GoCD (secrets pro IDEA HTTP client)
+http-client.private.env.json

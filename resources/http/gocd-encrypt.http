@@ -1,0 +1,10 @@
+### Zašifruje hodnotu serverovým klíčem GoCD (výsledek `encrypted_value` vlož do klib.gocd.yaml)
+# Přihlašovací údaje a token: resources/http/http-client.private.env.json (v gitignore)
+POST {{gocd-url}}/go/api/admin/encrypt
+Authorization: Basic {{gocd-user}} {{gocd-password}}
+Accept: application/vnd.go.cd.v1+json
+Content-Type: application/json
+
+{
+  "value": "{{ossrh-password}}"
+}
