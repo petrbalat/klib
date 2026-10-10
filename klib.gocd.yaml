@@ -1,7 +1,7 @@
 format_version: 10
 pipelines:
   klib:
-    group: libs
+    group: server
     label_template: ${COUNT}
     lock_behavior: none
     display_order: -1
@@ -24,9 +24,10 @@ pipelines:
         jobs:
           test:
             timeout: 0
-            # agent s Dockerem (:spring-boot-process:dockerTest); mailpit (SMTP :1025, API :8025) tam běží jako služba
-            resources:
-            - docker
+            # agent musí mít Docker (:spring-boot-process:dockerTest); mailpit (SMTP :1025, API :8025) tam běží jako služba
+            # (bez `resources` — agenti žádné nemají, stejně jako u easyrent)
+#            resources:
+#              - docker
             artifacts:
             - test:
                 source: "**/build/reports/tests/test"
