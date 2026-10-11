@@ -1,1 +1,0 @@
-- [Jazyk komunikace](feedback_language.md) — piš a komunikuj česky (dokumentace, odpovědi); kód/identifikátory nech v původním stylu

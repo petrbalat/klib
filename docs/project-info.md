@@ -2,19 +2,19 @@
 
 ## Základní informace
 - **Název**: klib
-- **Verze**: 2.0.0
+- **Verze**: 2.1.0 (zdroj pravdy: kořenový `build.gradle.kts`)
 - **Typ**: Multi-modul Kotlin/Spring Boot knihovna
 - **Repository**: https://github.com/petrbalat/klib
 - **Autor**: Petr Balát (petrbalat)
 
 ## Technologie
-- **Kotlin**: 2.3.0
-- **Java**: 21 (source & target compatibility)
-- **Spring Boot**: 4.0.0
+- **Kotlin**: 2.4.20
+- **Java**: 25 (source & target compatibility)
+- **Spring Boot**: 4.1.1
 - **Spring Framework**: 7.x
 - **Spring Security**: 7.x (s lambda DSL)
-- **Gradle**: 8.14.4 (Kotlin DSL)
-- **Kotlinx Coroutines**: 1.6.4
+- **Gradle**: 9.4.1 (Kotlin DSL)
+- **Kotlinx Coroutines**: verzi řídí Spring Boot BOM (v `jdk` jen `compileOnly`)
 - **Build system**: Gradle s Kotlin DSL
 - **Jakarta EE**: 11 (Servlet 6.1)
 
@@ -91,6 +91,13 @@ Správa a zpracování obrázků
 - **Poznámka**: Bez suspend (změna v 1.3.6)
 - **Závislosti**: jdk modul, spring-boot-starter-web, imgscalr, jackson
 
+### spring-boot-process
+Správa externích procesů
+- **Features**: watchdog, skupiny procesů s tagem, úklid sirotků, `runProcess`, `IntervalScheduler`, Kotlin DSL, autokonfigurace `klib.process.*`
+- **Závislosti**: nezávisí na `jdk`
+- **Testy**: Linux testy v kontejneru (`./gradlew :spring-boot-process:dockerTest`)
+- **Dokumentace**: `spring-boot-process/README.md`
+
 ### spring-boot-graphql
 GraphQL konfigurace
 - **Hlavní třída**: `GraphqlConfig` - Spring konfigurace
@@ -135,7 +142,7 @@ Retrofit2 interceptors
 - **Root projekt**: `build.gradle.kts` - společná konfigurace pro všechny moduly
 - **BuildSrc**: vlastní DSL a verze
   - `klibDsl.kt` - `publishingKlib()` funkce
-  - `version.kt` - `KlibVersions` objekt
+  - `dockerTest.kt` - `registerDockerTest()` pro testy v kontejneru
 - **Settings**: `settings.gradle.kts` - seznam modulů
 
 ### Publishing
@@ -152,6 +159,8 @@ Retrofit2 interceptors
 - Individual modul publish konfigurace (např. `klib_jwt [bintrayUpload].run.xml`)
 
 ## Historie verzí (poslední změny)
+
+Podrobnější historii viz `git log`; níže jen významné milníky.
 
 ### 2.0.0 (current) - BREAKING CHANGES
 - **Spring Boot 4.0.0** upgrade
@@ -182,10 +191,9 @@ Retrofit2 interceptors
 ## Git info
 - **Main branch**: master
 - **Remote**: GitHub
-- **Untracked files**: `spring-boot-image/c:\home\easyrent\resources/` (Windows path issue)
 
 ## Poznámky k projektu
-- Všechny moduly používají **Java 21** a **Kotlin 2.3.0**
+- Všechny moduly používají **Java 25** a **Kotlin 2.4.20**
 - Spring Boot moduly mají **bootJar disabled**, jen běžné JAR (knihovna, ne aplikace)
 - **Kotlin compiler args**: `-Xjsr305=strict`, `-Xjvm-default=all`, `-progressive`
 - **Test framework**: JUnit 5 (Jupiter)
