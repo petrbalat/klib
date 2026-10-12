@@ -3,7 +3,9 @@ package cz.petrbalat.klib.jdk
 import cz.petrbalat.klib.jdk.support.TestEnum
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class CommonUtilsTest {
@@ -22,6 +24,34 @@ class CommonUtilsTest {
         assertTrue(5.123456799999 relativelyEqual 5.123456799999)
     }
 
+
+    @Test
+    fun jdkNikdyNevratiSelfCause() {
+        val e = RuntimeException("a")
+        assertFailsWith<IllegalArgumentException> { e.initCause(e) }
+        // cause == this znamená "neinicializováno", getCause() vrací null
+        assertNull(e.cause)
+    }
+
+    @Test
+    fun causeSequenceRetez() {
+        val c = IllegalStateException("c")
+        val b = RuntimeException("b", c)
+        val a = RuntimeException("a", b)
+        assertEquals(listOf<Throwable>(a, b, c), a.causeSequence().toList())
+        assertEquals(listOf<Throwable>(c), c.causeSequence().toList())
+    }
+
+    @Test
+    fun causeSequenceCyklus() {
+        val a = RuntimeException("a")
+        val b = RuntimeException("b")
+        a.initCause(b)
+        b.initCause(a) // JDK cyklus delší než 1 nezachytí
+
+        val result = a.causeSequence().take(100).toList()
+        assertEquals(listOf<Throwable>(a, b), result)
+    }
 
     @Test
     fun enumFullName() {

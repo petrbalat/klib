@@ -12,11 +12,17 @@ import java.util.concurrent.Executor
  */
 fun Boolean.toBooleanInt(): Int = if (this) 1 else 0
 
-fun Throwable.causeSequence(): Sequence<Throwable> = generateSequence(this) {
-    if (it.cause == it) {
-        return@generateSequence null
+/**
+ * Řetěz výjimek od této výjimky (včetně) přes všechny její příčiny.
+ * Odolné vůči cyklům v řetězu (každá výjimka je vrácena nejvýše jednou).
+ */
+fun Throwable.causeSequence(): Sequence<Throwable> = sequence {
+    val seen = Collections.newSetFromMap(IdentityHashMap<Throwable, Boolean>())
+    var current: Throwable? = this@causeSequence
+    while (current != null && seen.add(current)) {
+        yield(current)
+        current = current.cause
     }
-    it.cause
 }
 
 /**
