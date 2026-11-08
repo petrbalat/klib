@@ -1,16 +1,8 @@
 package cz.petrbalat.klib.process
 
 import cz.petrbalat.klib.jdk.virtualThreadDispatcher
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.*
 import kotlinx.coroutines.future.await
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
@@ -130,14 +122,20 @@ suspend fun runProcess(executable: String, vararg args: String, block: RunProces
 suspend fun runProcess(command: List<String>, block: RunProcessBuilder.() -> Unit): ProcessResult =
     RunProcessBuilder().apply(block).run(command)
 
-/** Jednorázový příkaz s tagem skupiny — [ProcessGroup.stop] ho dorazí i s potomky (tag má přednost před env v [block]). */
+/** Jednorázový příkaz navázaný na skupinu — [ProcessGroup.stop] ho zruší a počká na úklid (tag má přednost před env v [block]). */
 suspend fun ProcessGroup.runProcess(executable: String, vararg args: String, block: RunProcessBuilder.() -> Unit = {}): ProcessResult =
     runProcess(listOf(executable) + args, block)
 
-/** Jednorázový příkaz s tagem skupiny — [ProcessGroup.stop] ho dorazí i s potomky (tag má přednost před env v [block]). */
+/** Jednorázový příkaz navázaný na skupinu — [ProcessGroup.stop] ho zruší a počká na úklid (tag má přednost před env v [block]). */
 suspend fun ProcessGroup.runProcess(command: List<String>, block: RunProcessBuilder.() -> Unit = {}): ProcessResult {
     val tag = environment
-    return RunProcessBuilder().apply(block).apply { env(tag) }.run(command)
+    val builder = RunProcessBuilder().apply(block).apply { env(tag) }
+    return coroutineScope {
+        val task: Deferred<ProcessResult> = async(start = CoroutineStart.LAZY) { builder.run(command) }
+        check(attach(task)) { "Process group $id is stopped" }
+        task.start()
+        task.await()
+    }
 }
 
 private fun writeStdin(process: Process, stdin: String?) {

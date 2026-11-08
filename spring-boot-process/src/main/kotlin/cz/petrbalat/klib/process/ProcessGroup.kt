@@ -49,7 +49,7 @@ internal class ProcessHooks(
 
 /**
  * Procesy jedné jednotky práce (instance akce, ladicí běh…): všechny nesou tag `<owner>/<id>` v env,
- * jejich watchdogy běží ve [scope]. [stop] zastaví spuštěné procesy a podle tagu dorazí i odpojené sirotky.
+ * jejich watchdogy běží ve [scope]. [stop] zastaví spuštěné procesy, navázanou práci a podle tagu dorazí i odpojené sirotky.
  * Vytváří jen [ProcessGroups] — restart a vzdání se watchdogu předá jeho [ProcessGroupsListener].
  */
 @ProcessDsl
@@ -68,7 +68,7 @@ class ProcessGroup internal constructor(
     /** podle [ManagedProcess.name] — proces po GaveUp / stop nahradí nový stejného názvu */
     private val processes = ConcurrentHashMap<String, ManagedProcess>()
 
-    /** práce navázaná na skupinu (cykly segmentů) — stop() ji zruší a počká na ni dřív než na procesy */
+    /** práce navázaná na skupinu (cykly segmentů, jednorázové příkazy) — stop() ji zruší a počká dřív než na reaper */
     private val attached: MutableSet<Job> = ConcurrentHashMap.newKeySet()
 
     // start (včetně forku) vs. přepnutí isStopped — stop() uprostřed startu by našel proces bez watchdogu a nezastavil ho
@@ -149,8 +149,8 @@ class ProcessGroup internal constructor(
     }
 
     /**
-     * Naváže [job] (cyklus segmentů) na skupinu: [stop] ho zruší a počká na něj — po zastavení skupiny tak nezačne
-     * další segment. Zastavená skupina job rovnou zruší a vrací false.
+     * Naváže [job] (cyklus segmentů nebo jednorázový příkaz) na skupinu: [stop] ho zruší a počká na něj. Zastavená
+     * skupina job rovnou zruší a vrací false.
      */
     internal fun attach(job: Job): Boolean {
         synchronized(lock) {

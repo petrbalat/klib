@@ -1,10 +1,15 @@
 package cz.petrbalat.klib.process
 
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIf
@@ -14,6 +19,7 @@ import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.io.IOException
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import kotlin.time.Duration
@@ -55,6 +61,70 @@ class LinuxProcessTest {
 
         runBlocking { group.stop() }
         waitUntil { orphans.none { isPidAlive(it) } }
+    }
+
+    @Test
+    fun `runProcess spuštěný po stop skupiny nevytvoří proces s tagem`() = runBlocking {
+        val group = group("run-after-stop-1")
+        val tag = tagging.tag("run-after-stop-1")
+        val pidFile = File(dir, "run-after-stop.pid")
+        val start = CompletableDeferred<Unit>()
+        val task = async(Dispatchers.IO) {
+            start.await()
+            runCatching {
+                group.runProcess("sh", "-c", "echo \$\$ > '${pidFile.path}'; exec sleep 1000") {
+                    timeout = 30.seconds
+                }
+            }
+        }
+
+        try {
+            group.stop()
+            start.complete(Unit)
+            withTimeout(5.seconds) {
+                while (!pidFile.exists() && !task.isCompleted) delay(10)
+            }
+
+            val pid = pidFile.takeIf { it.exists() }?.readText()?.trim()?.toLongOrNull()
+            if (pid != null) {
+                assertTrue(pid in taggedPids(tag), "proces vytvořený po stopu má tag skupiny")
+                assertTrue(isPidAlive(pid), "proces vytvořený po stopu stále běží")
+            }
+            assertFalse(pidFile.exists(), "runProcess vytvořil OS proces až po návratu group.stop()")
+            assertIs<IllegalStateException>(task.await().exceptionOrNull())
+            assertEquals(emptyList(), taggedPids(tag), "po stopu nesmí zůstat procesy s tagem skupiny")
+        } finally {
+            start.complete(Unit)
+            task.cancelAndJoin()
+            group.stop()
+        }
+    }
+
+    @Test
+    fun `stop skupiny ukončí běžící runProcess`() = runBlocking {
+        val group = group("run-stop-1")
+        val tag = tagging.tag("run-stop-1")
+        val pidFile = File(dir, "run-stop.pid")
+        val task = async(Dispatchers.IO) {
+            group.runProcess("sh", "-c", "echo \$\$ > '${pidFile.path}'; exec sleep 1000") {
+                timeout = 30.seconds
+            }
+        }
+
+        try {
+            waitUntil { pidFile.exists() && pidFile.readText().isNotBlank() }
+            val pid = pidFile.readText().trim().toLong()
+            assertTrue(pid in taggedPids(tag), "runProcess musí zdědit tag skupiny")
+
+            group.stop()
+
+            assertFalse(isPidAlive(pid), "runProcess přežil návrat group.stop()")
+            assertTrue(task.isCompleted, "group.stop() musí počkat na dokončení úlohy runProcess")
+            assertEquals(emptyList(), taggedPids(tag), "po stopu nesmí zůstat procesy s tagem skupiny")
+        } finally {
+            task.cancelAndJoin()
+            group.stop()
+        }
     }
 
     @Test

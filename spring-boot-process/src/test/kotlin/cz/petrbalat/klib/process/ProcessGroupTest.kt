@@ -4,6 +4,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
@@ -233,6 +234,52 @@ class ProcessGroupTest {
         val took = measureTime { runBlocking { group.stop() } }
         assertTrue(took < 2.5.seconds, "stop trval $took")
         processes.forEach { assertFalse(it.isAlive) }
+    }
+
+    @Test
+    fun `runProcess vrací výsledek příkazu s tagem skupiny`() = runBlocking {
+        val group = group()
+        try {
+            val result = group.runProcess("sh", "-c", "printf '%s' \"\$KLIB_PROCESS_TAG\"")
+            assertTrue(result.success)
+            assertEquals("test/12-3", result.output)
+        } finally {
+            group.stop()
+        }
+    }
+
+    @Test
+    fun `runProcess po stop skupiny selže před vytvořením procesu`() = runBlocking {
+        val group = group()
+        val marker = File(logs, "run-process-after-stop")
+        group.stop()
+
+        assertFailsWith<IllegalStateException> {
+            group.runProcess("sh", "-c", "touch '${marker.path}'")
+        }
+        assertFalse(marker.exists())
+    }
+
+    @Test
+    fun `zrušení volajícího runProcess ukončí příkaz`() = runBlocking {
+        val group = group()
+        val pidFile = File(logs, "run-process-cancel.pid")
+        val task = async(Dispatchers.IO) {
+            group.runProcess("sh", "-c", "echo \$\$ > '${pidFile.path}'; exec sleep 1000") {
+                timeout = 30.seconds
+            }
+        }
+
+        try {
+            waitUntil { pidFile.exists() && pidFile.readText().isNotBlank() }
+            val pid = pidFile.readText().trim().toLong()
+            task.cancelAndJoin()
+            waitUntil { !isPidAlive(pid) }
+            assertTrue(task.isCancelled)
+        } finally {
+            task.cancelAndJoin()
+            group.stop()
+        }
     }
 
     @Test
