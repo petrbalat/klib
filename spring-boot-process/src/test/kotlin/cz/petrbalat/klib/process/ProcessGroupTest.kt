@@ -221,6 +221,31 @@ class ProcessGroupTest {
     }
 
     @Test
+    fun `synchronní stop z onRestarting doběhne bez uváznutí`() {
+        val group = group()
+        val hookDone = CompletableFuture<Unit>()
+        lateinit var process: ManagedProcess
+        process = group.start("crasher") {
+            command("sh", "-c", "exit 1")
+            restart { delay = 10.seconds }
+            onRestarting {
+                runBlocking { group.stop() }
+                hookDone.complete(Unit)
+            }
+        }
+
+        try {
+            hookDone.get(5, TimeUnit.SECONDS)
+            waitUntil(5.seconds) { stopped.contains("12-3") }
+            assertFalse(process.isAlive)
+            assertEquals(ProcessState.Stopped, process.state.value)
+            assertEquals(listOf("12-3"), stopped)
+        } finally {
+            if (!hookDone.isDone) process.process?.destroyForcibly()
+        }
+    }
+
+    @Test
     fun `stop zastaví procesy skupiny souběžně, ne N × gracefulStop`() {
         val group = group()
         // ignoruje SIGTERM → každý stop čeká celý gracefulStop

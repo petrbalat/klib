@@ -119,7 +119,7 @@ class ProcessGroup internal constructor(
         lateinit var process: ManagedProcess
         process = ManagedProcess(spec.copy(environment = spec.environment + environment), scope) { s ->
             // nahrazený proces (doběhnutý finally po stop) stav nového nepřepíše
-            if (processes[name] === process) inCallback {
+            if (processes[name] === process) inCallback(s) {
                 _state.update { it + (name to s) }
                 // po stop() skupiny se nehlásí — instance už neběží
                 if (!isStopped) when (s) {
@@ -170,6 +170,8 @@ class ProcessGroup internal constructor(
      * se zastavením po konci scope) — kromě volání zevnitř skupiny, viz [awaitStopped].
      */
     suspend fun stop() {
+        val fromRestartingCallback: Boolean =
+            callbackGroup.get() === this && callbackState.get() is ProcessState.Restarting
         // počká na rozběhnutý start() — po zámku už každý spuštěný proces má watchdog a další start selže
         val first: Boolean = synchronized(lock) {
             if (isStopped) {
@@ -180,6 +182,15 @@ class ProcessGroup internal constructor(
             }
         }
         if (!first) return awaitStopped()
+        if (fromRestartingCallback) {
+            // zastavení joinuje watchdog, jehož callback právě běží na této niti
+            CoroutineScope(Dispatchers.IO).launch { stopFirst() }
+            return
+        }
+        stopFirst()
+    }
+
+    private suspend fun stopFirst() {
         try {
             // NonCancellable — ve zrušené korutině by withContext hned vyhodil a procesy by běžely dál
             withContext(NonCancellable + Dispatchers.IO) {
@@ -213,13 +224,16 @@ class ProcessGroup internal constructor(
     }
 
     /** callbacky procesu (listener registru, háčky DSL) — stop() z nich (i přes runBlocking) pozná, že je zevnitř */
-    private inline fun inCallback(block: () -> Unit) {
-        val previous = callbackGroup.get()
+    private inline fun inCallback(state: ProcessState, block: () -> Unit) {
+        val previousGroup = callbackGroup.get()
+        val previousState = callbackState.get()
         callbackGroup.set(this)
+        callbackState.set(state)
         try {
             block()
         } finally {
-            callbackGroup.set(previous)
+            callbackState.set(previousState)
+            callbackGroup.set(previousGroup)
         }
     }
 
@@ -228,5 +242,7 @@ class ProcessGroup internal constructor(
     private companion object {
         /** skupina, jejíž callback právě běží na tomto vlákně (vlákno watchdogu) */
         val callbackGroup = ThreadLocal<ProcessGroup?>()
+        /** stav, jehož callback právě běží; jen Restarting potřebuje odložit první stop kvůli joinu watchdogu */
+        val callbackState = ThreadLocal<ProcessState?>()
     }
 }

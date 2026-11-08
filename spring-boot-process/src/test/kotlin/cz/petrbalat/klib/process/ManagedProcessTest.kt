@@ -83,6 +83,19 @@ class ManagedProcessTest {
     }
 
     @Test
+    fun `proces bez vstupu dostane EOF`() {
+        val marker = File(dir, "stdin-eof")
+        val process = startProcess {
+            command("sh", "-c", "cat >/dev/null; touch '${marker.path}'")
+            noRestart()
+        }
+
+        waitUntil { marker.exists() }
+        assertTrue(marker.exists(), "proces se čtením stdin musí po startu dostat EOF")
+        process.state.await { it is ProcessState.GaveUp }
+    }
+
+    @Test
     fun `GaveUp přijde do onStateChange právě jednou`() {
         val starts = File(dir, "starts")
         val gaveUp = CopyOnWriteArrayList<ProcessState.GaveUp>()

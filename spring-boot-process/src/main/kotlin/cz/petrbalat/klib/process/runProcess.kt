@@ -74,6 +74,8 @@ suspend fun runProcess(
                 reading.joinWithin(OUTPUT_GRACE)
             }
         }
+        // Po normálním konci rodiče uklidit i potomky, kteří rouru výstupu nedrží.
+        if (exited) launched.killLeftovers()
         // waitFor() bez limitu by u procesu v nepřerušitelném I/O visel navždy, i přes timeout
         val exitValue: Int? = if (process.isAlive) null else process.exitValue()
         ProcessResult(command, exitValue, output.text(), timedOut = !exited, outputTruncated = output.truncated)

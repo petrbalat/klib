@@ -53,6 +53,30 @@ class RunProcessTest {
         waitUntil { !isPidAlive(pidFile.readText().trim().toLong()) }
     }
 
+    /** Normální konec rodiče musí uklidit i odpojeného potomka, který nedrží výstupní rouru. */
+    @Test
+    @EnabledOnOs(OS.LINUX)
+    fun `nenulový konec uklidí odpojeného potomka a nezasáhne cizí proces`() = runBlocking {
+        val pidFile = File(dir, "orphan.pid")
+        val unrelated = ProcessBuilder("sleep", "1000").start()
+        var orphanPid: Long? = null
+        try {
+            val result = runProcess("sh", "-c", "sleep 1000 >/dev/null 2>&1 & echo \$! > '${pidFile.path}'; exit 7") {
+                timeout = 5.seconds
+            }
+            val pid = pidFile.readText().trim().toLong()
+            orphanPid = pid
+
+            assertEquals(7, result.exitValue)
+            assertFalse(result.timedOut)
+            waitUntil { !isPidAlive(pid) }
+            assertTrue(unrelated.isAlive, "úklid spuštění nesmí zabít cizí proces")
+        } finally {
+            orphanPid?.let { ProcessHandle.of(it).ifPresent(ProcessHandle::destroyForcibly) }
+            unrelated.destroyForcibly()
+        }
+    }
+
     /** Upovídaný proces nesmí zaplnit haldu — drží se konec výstupu, kde bývají chyby. */
     @Test
     fun `výstup nad maxOutput se ořízne na konec`() = runBlocking {

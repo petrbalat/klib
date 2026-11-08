@@ -18,10 +18,17 @@ fun Process.stopGracefully(gracefulStop: Duration = 5.seconds) {
     // sesbírat PŘED destroy — po smrti rodiče je handle nevrátí
     val descendants: List<ProcessHandle> = descendants().toList()
 
-    logger.info("Stopping process {} (SIGTERM, +{} descendants)", pid(), descendants.size)
-    destroy()
-    if (!waitFor(gracefulStop.inWholeMilliseconds, TimeUnit.MILLISECONDS)) {
-        if (gracefulStop.isPositive()) logger.warn("Process {} ignored SIGTERM for {} → SIGKILL", pid(), gracefulStop)
+    if (gracefulStop.isPositive()) {
+        logger.info("Stopping process {} (SIGTERM, +{} descendants)", pid(), descendants.size)
+        destroy()
+        if (!waitFor(gracefulStop.inWholeMilliseconds, TimeUnit.MILLISECONDS)) {
+            logger.warn("Process {} ignored SIGTERM for {} → SIGKILL", pid(), gracefulStop)
+            destroyForcibly()
+            // po návratu proces opravdu neběží (SIGKILL doručí jádro asynchronně)
+            waitFor(SIGKILL_WAIT_SECONDS, TimeUnit.SECONDS)
+        }
+    } else {
+        logger.info("Stopping process {} (SIGKILL, +{} descendants)", pid(), descendants.size)
         destroyForcibly()
         // po návratu proces opravdu neběží (SIGKILL doručí jádro asynchronně)
         waitFor(SIGKILL_WAIT_SECONDS, TimeUnit.SECONDS)

@@ -64,6 +64,39 @@ class LinuxProcessTest {
     }
 
     @Test
+    fun `nulový graceful stop přeskočí SIGTERM a kladný jej doručí`() {
+        val zeroReady = File(dir, "zero.ready")
+        val zeroTerm = File(dir, "zero.term")
+        val zero = ProcessBuilder(
+            "sh", "-c",
+            "trap 'touch '${zeroTerm.path}'; while :; do :; done' TERM; touch '${zeroReady.path}'; while :; do :; done",
+        ).start()
+        try {
+            waitUntil { zeroReady.exists() }
+            zero.stopGracefully(Duration.ZERO)
+            assertFalse(zeroTerm.exists(), "Duration.ZERO nesmí spustit SIGTERM handler")
+            assertFalse(zero.isAlive)
+        } finally {
+            zero.destroyForcibly()
+        }
+
+        val positiveReady = File(dir, "positive.ready")
+        val positiveTerm = File(dir, "positive.term")
+        val positive = ProcessBuilder(
+            "sh", "-c",
+            "trap 'touch '${positiveTerm.path}'; exit 0' TERM; touch '${positiveReady.path}'; while :; do :; done",
+        ).start()
+        try {
+            waitUntil { positiveReady.exists() }
+            positive.stopGracefully(2.seconds)
+            assertTrue(positiveTerm.exists(), "kladný timeout musí dát SIGTERM handleru šanci")
+            assertFalse(positive.isAlive)
+        } finally {
+            positive.destroyForcibly()
+        }
+    }
+
+    @Test
     fun `runProcess spuštěný po stop skupiny nevytvoří proces s tagem`() = runBlocking {
         val group = group("run-after-stop-1")
         val tag = tagging.tag("run-after-stop-1")

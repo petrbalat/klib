@@ -5,16 +5,18 @@ Správa externích procesů (přehrávače, Chromium, LibreOffice…) pro Spring
 - **`ProcessSpec`** — neměnný popis procesu (příkaz, název, env, pracovní adresář, výstup, `RestartPolicy`,
   `gracefulStop`); v DSL `processSpec { }`.
 - **`ManagedProcess`** — watchdog s restarty podle `RestartPolicy` (nulování po stabilním běhu), stop celého
-  stromu (SIGTERM → `gracefulStop` → SIGKILL), rotace logu, `state: StateFlow<ProcessState>`.
+  stromu (SIGTERM → `gracefulStop` → SIGKILL; `Duration.ZERO` = rovnou SIGKILL), rotace logu,
+  `state: StateFlow<ProcessState>`. Nepoužívaný stdin se při startu uzavře, proces dostane EOF.
 - **`ProcessGroup`** — procesy jedné jednotky práce; všechny nesou env `KLIB_PROCESS_TAG=<owner>/<groupId>`
   (dědí ho i potomci). Název procesu je ve skupině klíčem. `stop()` zastaví navázané cykly, procesy a podle tagu
-  dorazí i odpojené sirotky (`setsid`).
+  dorazí i odpojené sirotky (`setsid`). `stop()` z callbacku `Restarting` nečeká sám na watchdog; úklid doběhne po návratu
+  z callbacku.
 - **`ProcessGroups`** — továrna a registr skupin (`withGroup`, `create`, `find`), úklid sirotků vlastníka
   (`reapOrphans`), pojistka `close()`. Ve Spring Bootu bean z autokonfigurace, který publikuje `ProcessRestartedEvent`
   a `ProcessGaveUpEvent` (s Micrometerem z nich počítadla `klib.process.restarts` / `klib.process.gave_up`); bez Springu
   `processGroups(owner) { }`.
 - **`runProcess`** — jednorázový příkaz (suspend), souběžné čtení výstupu se stropem, timeout s jistým návratem,
-  stdin, `checkSuccess()`.
+  stdin, `checkSuccess()`. Na Linuxu po normálním konci uklízí podle env instance i potomky, kteří nedrží rouru výstupu.
 - **`SegmentCyclePlayer`** — cyklus „proces na N sekund, pak další“; `segment(duration) { }` je popis,
   co právě hraje, ukazuje `nowPlaying`. Ve skupině `group.playCycle { }` — skončí se skupinou.
 - **`IntervalScheduler<K>`** — intervaly s párovanými `onStart`/`onEnd(EndReason)` se stropem `callbackTimeout`

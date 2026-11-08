@@ -217,6 +217,8 @@ class ManagedProcess(
             val launched = launch(spec.command, spec.environment, spec.workingDirectory, spec.name) { redirectOutput(redirect) }
             this.launched = launched
             process = launched.process
+            runCatching { launched.process.outputStream.close() }
+                .onFailure { logger.warn("Could not close stdin of process ${spec.name}", it) }
             setState(ProcessState.Running(launched.process.pid(), restarts))
             logger.info("Process {} started, PID {}", spec.name, launched.process.pid())
             return launched.process
