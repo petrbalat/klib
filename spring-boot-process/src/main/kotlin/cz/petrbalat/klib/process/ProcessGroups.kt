@@ -29,8 +29,6 @@ interface ProcessGroupsListener {
  * [close] je pojistka pro skupiny, které aplikace nezastavila — zastaví je souběžně, nejvýš [shutdownTimeout].
  */
 class ProcessGroups(
-    private val tagging: ProcessTagging,
-    private val reaper: ProcessReaper = ProcessReaper(tagging),
     private val defaults: ProcessDefaults = ProcessDefaults(),
     private val listener: ProcessGroupsListener = object : ProcessGroupsListener {},
     private val shutdownTimeout: Duration = 8.seconds,
@@ -59,7 +57,7 @@ class ProcessGroups(
      * která se ještě zastavuje. Skončí-li [scope] bez [ProcessGroup.stop], skupina se zastaví a z registru zmizí sama.
      */
     fun create(id: String, scope: CoroutineScope): ProcessGroup {
-        val group = ProcessGroup(id, tagging, scope, reaper, defaults, groupListener)
+        val group = ProcessGroup(id, scope, defaults, groupListener)
         _groups.update {
             val existing = it[id]
             require(existing == null) {
@@ -72,13 +70,6 @@ class ProcessGroups(
     }
 
     fun find(id: String): ProcessGroup? = _groups.value[id]
-
-    /** Zabije sirotky vlastníka z minulého běhu JVM (procesy s jeho tagem); vrací počet. */
-    fun reapOrphans(): Int {
-        val killed = reaper.killAllOwned()
-        if (killed > 0) logger.warn("Killed {} orphaned processes of owner {}", killed, tagging.owner)
-        return killed
-    }
 
     /** Zastaví skupiny, které aplikace nezastavila — souběžně, nejvýš [shutdownTimeout]. */
     override fun close() {

@@ -45,9 +45,7 @@ fun command(executable: String, vararg args: String, block: CommandBuilder.() ->
     CommandBuilder(executable, args).apply(block).build()
 
 /**
- * `sudo -n <command>` — bez hesla selže hned, místo čekání na prompt až do timeoutu. sudo resetuje env: proces pod ním
- * nenese tag skupiny ani [ManagedProcess.INSTANCE_ENV] (a jako root by ho reaper stejně nepřečetl) — ukončí ho jen
- * stop přes strom procesu.
+ * `sudo -n <command>` — bez hesla selže hned, místo čekání na prompt až do timeoutu.
  */
 fun sudo(command: List<String>): List<String> = listOf("sudo", "-n") + command
 

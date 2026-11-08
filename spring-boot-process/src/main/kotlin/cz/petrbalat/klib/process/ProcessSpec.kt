@@ -7,8 +7,6 @@ import kotlin.time.Duration.Companion.seconds
 
 /**
  * Neměnný popis externího procesu — sdílí ho [ManagedProcess], [ProcessGroup.start] i segmenty cyklu.
- * Spuštění přidá do env id instance ([ManagedProcess.INSTANCE_ENV]) a skupina svůj tag; obojí má přednost
- * před [environment].
  */
 data class ProcessSpec(
     /** seznam argumentů, bez shellu */

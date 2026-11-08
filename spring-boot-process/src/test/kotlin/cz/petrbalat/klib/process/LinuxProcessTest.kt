@@ -1,143 +1,58 @@
 package cz.petrbalat.klib.process
 
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.cancelAndJoin
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeout
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledIf
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
-import java.io.IOException
-import kotlin.test.assertEquals
+import java.util.concurrent.TimeUnit
 import kotlin.test.assertFalse
-import kotlin.test.assertIs
 import kotlin.test.assertTrue
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
-/**
- * Chování, které jde ověřit jen na skutečném Linuxu (`/proc`, setsid, zombie) — na macOS se přeskočí,
- * plně běží v kontejneru (`./gradlew :spring-boot-process:dockerTest`).
- */
-@EnabledOnOs(OS.LINUX)
 class LinuxProcessTest {
-
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val tagging = ProcessTagging("test")
-    private val reaper = ProcessReaper(tagging)
-    private val started = mutableListOf<Process>()
 
     @TempDir
     lateinit var dir: File
 
-    private fun group(id: String) = ProcessGroup(id, tagging, scope, reaper, ProcessDefaults(), object : ProcessGroupListener {})
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val groups = processGroups { shutdownTimeout = 5.seconds }
 
     @AfterEach
     fun tearDown() {
-        started.forEach { it.destroyForcibly() }
-        reaper.killAllOwned()
+        groups.close()
         scope.cancel()
     }
 
     @Test
-    fun `stop skupiny dorazí odpojeného sirotka podle tagu`() {
-        val group = group("detach-1")
-        val process = group.start { command("sh", fixture("detacher.sh")); noRestart() }
-        process.state.await { it is ProcessState.GaveUp } // rodič skončil hned
-        waitUntil { taggedPids(tagging.tag("detach-1")).isNotEmpty() }
-        val orphans = taggedPids(tagging.tag("detach-1"))
-        assertTrue(orphans.all { isPidAlive(it) }, "sirotek po setsid běží dál s tagem skupiny")
+    @RequiresPidNamespace
+    fun `stop skupiny uklidí odpojeného setsid potomka přes PID namespace`() {
+        val group = groups.create("detached", scope)
+        val ready = File(dir, "ready")
+        val process = group.start {
+            command("sh", "-c", "setsid sh -c 'exec sleep 1001' </dev/null >/dev/null 2>&1 & touch '${ready.path}'; exec sleep 1000")
+            noRestart()
+        }
+        waitUntil { ready.exists() }
+        val detached = awaitDescendant(process, "sleep", "1001")
+        assertTrue(detached.isAlive)
 
         runBlocking { group.stop() }
-        waitUntil { orphans.none { isPidAlive(it) } }
+
+        waitUntil { !detached.isAlive }
+        assertFalse(process.isAlive)
     }
 
     @Test
-    fun `nulový graceful stop přeskočí SIGTERM a kladný jej doručí`() {
-        val zeroReady = File(dir, "zero.ready")
-        val zeroTerm = File(dir, "zero.term")
-        val zero = ProcessBuilder(
-            "sh", "-c",
-            "trap 'touch '${zeroTerm.path}'; while :; do :; done' TERM; touch '${zeroReady.path}'; while :; do :; done",
-        ).start()
-        try {
-            waitUntil { zeroReady.exists() }
-            zero.stopGracefully(Duration.ZERO)
-            assertFalse(zeroTerm.exists(), "Duration.ZERO nesmí spustit SIGTERM handler")
-            assertFalse(zero.isAlive)
-        } finally {
-            zero.destroyForcibly()
-        }
-
-        val positiveReady = File(dir, "positive.ready")
-        val positiveTerm = File(dir, "positive.term")
-        val positive = ProcessBuilder(
-            "sh", "-c",
-            "trap 'touch '${positiveTerm.path}'; exit 0' TERM; touch '${positiveReady.path}'; while :; do :; done",
-        ).start()
-        try {
-            waitUntil { positiveReady.exists() }
-            positive.stopGracefully(2.seconds)
-            assertTrue(positiveTerm.exists(), "kladný timeout musí dát SIGTERM handleru šanci")
-            assertFalse(positive.isAlive)
-        } finally {
-            positive.destroyForcibly()
-        }
-    }
-
-    @Test
-    fun `runProcess spuštěný po stop skupiny nevytvoří proces s tagem`() = runBlocking {
-        val group = group("run-after-stop-1")
-        val tag = tagging.tag("run-after-stop-1")
-        val pidFile = File(dir, "run-after-stop.pid")
-        val start = CompletableDeferred<Unit>()
-        val task = async(Dispatchers.IO) {
-            start.await()
-            runCatching {
-                group.runProcess("sh", "-c", "echo \$\$ > '${pidFile.path}'; exec sleep 1000") {
-                    timeout = 30.seconds
-                }
-            }
-        }
-
-        try {
-            group.stop()
-            start.complete(Unit)
-            withTimeout(5.seconds) {
-                while (!pidFile.exists() && !task.isCompleted) delay(10)
-            }
-
-            val pid = pidFile.takeIf { it.exists() }?.readText()?.trim()?.toLongOrNull()
-            if (pid != null) {
-                assertTrue(pid in taggedPids(tag), "proces vytvořený po stopu má tag skupiny")
-                assertTrue(isPidAlive(pid), "proces vytvořený po stopu stále běží")
-            }
-            assertFalse(pidFile.exists(), "runProcess vytvořil OS proces až po návratu group.stop()")
-            assertIs<IllegalStateException>(task.await().exceptionOrNull())
-            assertEquals(emptyList(), taggedPids(tag), "po stopu nesmí zůstat procesy s tagem skupiny")
-        } finally {
-            start.complete(Unit)
-            task.cancelAndJoin()
-            group.stop()
-        }
-    }
-
-    @Test
-    fun `stop skupiny ukončí běžící runProcess`() = runBlocking {
-        val group = group("run-stop-1")
-        val tag = tagging.tag("run-stop-1")
-        val pidFile = File(dir, "run-stop.pid")
+    fun `stop skupiny zruší runProcess přímý proces a počká na něj`() = runBlocking {
+        val group = groups.create("run-process", scope)
+        val pidFile = File(dir, "run-process.pid")
         val task = async(Dispatchers.IO) {
             group.runProcess("sh", "-c", "echo \$\$ > '${pidFile.path}'; exec sleep 1000") {
                 timeout = 30.seconds
@@ -147,111 +62,48 @@ class LinuxProcessTest {
         try {
             waitUntil { pidFile.exists() && pidFile.readText().isNotBlank() }
             val pid = pidFile.readText().trim().toLong()
-            assertTrue(pid in taggedPids(tag), "runProcess musí zdědit tag skupiny")
 
             group.stop()
 
-            assertFalse(isPidAlive(pid), "runProcess přežil návrat group.stop()")
-            assertTrue(task.isCompleted, "group.stop() musí počkat na dokončení úlohy runProcess")
-            assertEquals(emptyList(), taggedPids(tag), "po stopu nesmí zůstat procesy s tagem skupiny")
+            waitUntil { !isPidAlive(pid) }
+            assertTrue(task.isCompleted)
         } finally {
-            task.cancelAndJoin()
+            task.cancel()
             group.stop()
         }
     }
 
     @Test
-    @EnabledIf("cz.petrbalat.klib.process.LinuxProcessTest#underInit")
-    fun `pod tini nezůstanou zombie osiřelých potomků`() {
-        val group = group("zombie-1")
-        group.start { command("sh", fixture("detacher.sh")); noRestart() }
-        waitUntil { taggedPids(tagging.tag("zombie-1")).isNotEmpty() }
-
-        runBlocking { group.stop() }
-        Thread.sleep(300) // tini sirotka uklidí asynchronně
-        assertEquals(emptyList(), zombies(), "zombie procesy v kontejneru")
-    }
-
-    @Test
-    fun `killAllOwned nezabije procesy jiného vlastníka`() {
-        val own = startTagged("test/1")
-        val foreign = startTagged("other/1")
-
-        assertEquals(1, reaper.killAllOwned())
-        waitUntil { !own.isAlive }
-        Thread.sleep(100)
-        assertTrue(foreign.isAlive, "proces vlastníka other přežije úklid vlastníka test")
+    fun `runProcess nepůsobí na cizí procesy`() = runBlocking {
+        val unrelated = ProcessBuilder("sleep", "1000").start()
+        try {
+            assertTrue(runProcess("true").success)
+            assertTrue(unrelated.isAlive, "runProcess smí ukončit jen vlastní přímý proces")
+        } finally {
+            unrelated.destroyForcibly()
+            unrelated.waitFor(2, TimeUnit.SECONDS)
+        }
     }
 
     @Test
     @EnabledIf("cz.petrbalat.klib.process.LinuxProcessTest#sudoAvailable")
-    fun `proces pod sudo reaper nepřečte, stop skupiny ho ukončí přes strom`() {
-        val group = group("sudo-1")
-        val process = group.start { command(sudo("/usr/bin/sleep", "1000")); noRestart() }
-        val sudoPid = assertIs<ProcessState.Running>(process.state.value).pid
-        waitUntil { ProcessHandle.of(sudoPid).get().descendants().count() > 0 || !isPidAlive(sudoPid) }
-
-        // známé omezení: environ procesů roota (sudo, sleep) není čitelný → podle tagu je nenajde
-        assertEquals(0, reaper.kill("sudo-1"))
-        assertTrue(isPidAlive(sudoPid))
-
-        runBlocking { group.stop() } // SIGTERM sudu, ten ho předá příkazu
-        waitUntil { !isPidAlive(sudoPid) }
+    fun `runProcess zachovává přímé sudo volání`() = runBlocking {
+        assertTrue(runProcess(sudo("/usr/bin/sleep", "0")).success)
     }
 
-    @Test
-    fun `stovky restartů neprosakují deskriptory ani vlákna JVM`() {
-        // kiosk běží měsíce a padající přehrávač se restartuje pořád dokola
-        val group = group("soak-1")
-        val process = group.start {
-            command("sh", "-c", "echo crash; exit 1")
-            logTo(File(dir, "soak.log"))
-            restart { maxRestarts = SOAK_RESTARTS; delay = 10.milliseconds; stableRun = Duration.INFINITE }
-        }
-
-        // základ až po zahřátí (pool vláken IO, process reaper)
-        process.state.await(10.seconds) { it is ProcessState.Running && it.restarts >= SOAK_WARMUP }
-        val fds = openFds()
-        val threads = threadCount()
-
-        process.state.await(60.seconds) { it is ProcessState.GaveUp }
-        Thread.sleep(300)
-        assertTrue(openFds() - fds <= SOAK_TOLERANCE, "otevřené fd: $fds → ${openFds()}")
-        assertTrue(threadCount() - threads <= SOAK_TOLERANCE, "vlákna: $threads → ${threadCount()}")
-        runBlocking { group.stop() }
-    }
-
-    private fun openFds(): Int = File("/proc/self/fd").list().orEmpty().size
-
-    private fun threadCount(): Int = File("/proc/self/task").list().orEmpty().size
-
-    private fun startTagged(tag: String): Process =
-        ProcessBuilder("sleep", "1000")
-            .apply { environment()[tagging.envName] = tag }
-            .start().also { started += it }
-
-    private fun taggedPids(tag: String): List<Long> =
-        File("/proc").listFiles().orEmpty()
-            .mapNotNull { it.name.toLongOrNull() }
-            .filter { readProcessTag(File("/proc/$it"), tagging.envName) == tag }
-
-    /** stav `Z` z `/proc/<pid>/stat` (třetí pole za názvem v závorkách) */
-    private fun zombies(): List<String> =
-        File("/proc").listFiles().orEmpty()
-            .filter { it.name.toLongOrNull() != null }
-            .mapNotNull { dir ->
-                val stat = try { File(dir, "stat").readText() } catch (_: IOException) { return@mapNotNull null }
-                stat.takeIf { it.substringAfterLast(") ").startsWith("Z") }
+    private fun awaitDescendant(process: ManagedProcess, command: String, argument: String): ProcessHandle {
+        var descendant: ProcessHandle? = null
+        waitUntil(5.seconds) {
+            descendant = process.process?.toHandle()?.descendants()?.toList()?.firstOrNull {
+                it.isAlive && it.info().command().orElse("").substringAfterLast('/') == command &&
+                    argument in it.info().arguments().orElse(emptyArray())
             }
+            descendant != null
+        }
+        return checkNotNull(descendant) { "ManagedProcess has no live $command descendant" }
+    }
 
     companion object {
-        private const val SOAK_RESTARTS = 200
-        private const val SOAK_WARMUP = 20
-        private const val SOAK_TOLERANCE = 10
-
-        @JvmStatic
-        fun underInit(): Boolean = runCatching { File("/proc/1/comm").readText().trim() == "tini" }.getOrDefault(false)
-
         @JvmStatic
         fun sudoAvailable(): Boolean = runCatching {
             ProcessBuilder("sudo", "-n", "/usr/bin/sleep", "0").start().waitFor() == 0

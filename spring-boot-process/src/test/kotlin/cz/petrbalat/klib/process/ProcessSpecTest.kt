@@ -42,6 +42,7 @@ class ProcessSpecTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `ManagedProcess běží v pracovním adresáři spec`() {
         val log = File(dir, "pwd.log")
         val work = File(dir, "work").apply { mkdirs() }

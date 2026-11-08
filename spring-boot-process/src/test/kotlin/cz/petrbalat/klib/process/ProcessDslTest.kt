@@ -34,7 +34,7 @@ class ProcessDslTest {
     private val gaveUp = CopyOnWriteArrayList<String>()
 
     private val groups by lazy {
-        processGroups("dsl-test") {
+        processGroups {
             logsDirectory = logs
             gracefulStop = 1.seconds
             restart { maxRestarts = 3; delay = 10.milliseconds }
@@ -89,6 +89,7 @@ class ProcessDslTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `start ve skupině dosadí výchozí hodnoty skupiny a log podle názvu`() = runBlocking {
         val group = groups.create("g-1", scope)
         try {
@@ -98,13 +99,14 @@ class ProcessDslTest {
             assertEquals(RestartPolicy(maxRestarts = 3, delay = 10.milliseconds), process.spec.restart)
             assertEquals(1.seconds, process.spec.gracefulStop)
             assertEquals(ProcessOutput.ToFile(File(logs, "sleep.log")), process.spec.output)
-            assertEquals("dsl-test/g-1", process.spec.environment["KLIB_PROCESS_TAG"])
+            assertTrue(process.spec.environment.isEmpty())
         } finally {
             group.stop()
         }
     }
 
     @Test
+    @RequiresPidNamespace
     fun `onGaveUp procesu i registru dostanou vzdání se`() = runBlocking {
         val group = groups.create("g-2", scope)
         val processGaveUp = CompletableDeferred<GiveUp>()
@@ -120,6 +122,7 @@ class ProcessDslTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `withGroup zastaví skupinu na konci bloku`() = runBlocking {
         lateinit var process: ManagedProcess
         val result = groups.withGroup("w-1") {
@@ -134,6 +137,7 @@ class ProcessDslTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `withGroup zastaví skupinu i při zrušení korutiny`() = runBlocking {
         val started = CompletableDeferred<ManagedProcess>()
         val action = scope.launch {
@@ -150,6 +154,7 @@ class ProcessDslTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `withGroup počká na dobíhající skupinu se stejným id`() = runBlocking {
         // předchozí běh akce ještě zastavuje proces, který ignoruje SIGTERM (gracefulStop 1 s)
         val previous = groups.create("action-42", scope)
@@ -164,6 +169,7 @@ class ProcessDslTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `restart v DSL mění kopii výchozí politiky skupiny`() = runBlocking {
         groups.withGroup("r-1") {
             val process = start {
@@ -175,12 +181,10 @@ class ProcessDslTest {
     }
 
     @Test
-    fun `runProcess ve withGroup nese tag skupiny, env z bloku ho nepřepíše`() = runBlocking {
-        val tags = groups.withGroup("run-1") {
-            val implicit = runProcess("sh", "-c", "printf \"\$KLIB_PROCESS_TAG\"").output
-            val explicit = runProcess(listOf("sh", "-c", "printf \"\$KLIB_PROCESS_TAG\"")) { env("KLIB_PROCESS_TAG", "jiny/tag") }.output
-            implicit to explicit
+    fun `runProcess ve withGroup ponechá explicitní env`() = runBlocking {
+        val output = groups.withGroup("run-1") {
+            runProcess(listOf("sh", "-c", "printf \"\$APP_TAG\"")) { env("APP_TAG", "caller/value") }.output
         }
-        assertEquals("dsl-test/run-1" to "dsl-test/run-1", tags)
+        assertEquals("caller/value", output)
     }
 }

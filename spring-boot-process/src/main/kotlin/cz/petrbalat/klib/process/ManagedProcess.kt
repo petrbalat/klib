@@ -3,7 +3,9 @@ package cz.petrbalat.klib.process
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.cancelAndJoin
@@ -30,20 +32,21 @@ sealed interface ProcessState {
     /** před [ManagedProcess.start] */
     data object Idle : ProcessState
     data class Running(val pid: Long, val restarts: Int) : ProcessState
+
     /** čeká [RestartPolicy.delay] před restartem číslo [restarts]; [exitCode] null = selhalo spuštění */
     data class Restarting(val restarts: Int, val exitCode: Int?) : ProcessState
+
     /** vyčerpán [RestartPolicy.maxRestarts] */
     data class GaveUp(val restarts: Int) : ProcessState
+
     /** [ManagedProcess.stop] nebo zrušený scope */
     data object Stopped : ProcessState
 }
 
 /**
  * Externí proces (Chromium, mpv, LibreOffice…) s watchdogem: restart při pádu podle [RestartPolicy], pak [ProcessState.GaveUp].
- * Watchdog je coroutine ve [scope] — [stop] i zrušení scope zastaví proces (SIGTERM → SIGKILL celého stromu);
- * odpojené potomky (`setsid`) dorazí [ProcessReaper]. Potomky, které přežily pád rodiče (spadlý wrapper Chromia),
- * zabije watchdog před restartem a [stop] — na Linuxu podle env [INSTANCE_ENV] každého spuštění. V kontejneru je nutný init (`tini`, `docker run --init`),
- * jinak se hromadí zombie osiřelých potomků.
+ * Watchdog je coroutine ve [scope]. Každý běh vzniká v odděleném PID namespace; jádro při ukončení jeho initu uklidí
+ * i odpojené potomky. Provoz vyžaduje Linux, `unshare` a `/usr/bin/tini`.
  */
 class ManagedProcess(
     val spec: ProcessSpec,
@@ -83,7 +86,6 @@ class ManagedProcess(
     fun start(): Unit = synchronized(lock) {
         val previous = current
         check(previous?.isRunning != true) { "Process ${spec.name} is already running" }
-        previous?.killLeftovers() // nový start po GaveUp — pozůstatky posledního běhu by blokovaly zařízení / profil
         val run = Run()
         current = run
         try {
@@ -94,28 +96,23 @@ class ManagedProcess(
         }
     }
 
-    /** Zruší watchdog a počká, až zastaví proces přes [stopGracefully]; po GaveUp dorazí pozůstatky posledního běhu. */
+    /** Zruší watchdog a počká na ukončení aktuálního PID namespace. */
     suspend fun stop() {
         val run = synchronized(lock) { current } ?: return
         run.stop()
     }
 
-    /** SIGKILL pozůstatkům posledního spuštění — pro skupinu, která proces nahrazuje novým stejného názvu. */
-    internal fun killLeftovers() {
-        current?.killLeftovers()
-    }
-
     override fun toString(): String = "ManagedProcess(${spec.name}, ${state.value})"
 
     /**
-     * Jedno spuštění watchdogu — vlastní proces, id instance, příznak vzdání se a job. Watchdog předchozího
+     * Jedno spuštění watchdogu — vlastní proces, příznak vzdání se a job. Watchdog předchozího
      * spuštění tak po novém [start] (např. z [onStateChange] při GaveUp) nezastaví nový proces ani nepřepíše jeho stav.
      */
     private inner class Run {
         @Volatile
         var process: Process? = null
 
-        /** poslední spuštění — zůstává i po zastavení, podle něj se dorazí potomci, kteří přežili rodiče */
+        /** poslední spuštění pro zastavení procesu a namespace */
         @Volatile
         private var launched: Launched? = null
 
@@ -129,10 +126,11 @@ class ManagedProcess(
         /** watchdog běží a nevzdal se */
         val isRunning: Boolean get() = job?.isActive == true && !gaveUp
 
+        @OptIn(ExperimentalCoroutinesApi::class, DelicateCoroutinesApi::class)
         fun start() {
             val first: Process = launchProcess(restarts = 0)
-            // UNDISPATCHED: tělo začne i ve zrušeném scope → finally proces vždy zastaví
-            job = scope.launch(Dispatchers.IO + CoroutineName("watchdog-${spec.name}"), CoroutineStart.UNDISPATCHED) {
+            // ATOMIC: finally proběhne i ve zrušeném scope, callback ale neběží pod startovacími zámky volajícího.
+            job = scope.launch(Dispatchers.IO + CoroutineName("watchdog-${spec.name}"), CoroutineStart.ATOMIC) {
                 watch(first)
             }
         }
@@ -142,7 +140,6 @@ class ManagedProcess(
             // po GaveUp proces neběží a není na co čekat — stop() z onStateChange (vlákno watchdogu) by jinak čekal sám na sebe
             if (gaveUp) {
                 job.cancel()
-                killLeftovers()
             } else {
                 job.cancelAndJoin()
             }
@@ -163,15 +160,13 @@ class ManagedProcess(
                         proc.exitValue()
                     }
                     val restarts: Int = budget.next() ?: return giveUp(budget.restarts)
-                    // potomci spadlého procesu (už mimo jeho strom) — nová instance by narazila na zámek profilu / zařízení
-                    if (exitCode != null) killLeftovers()
                     setState(ProcessState.Restarting(restarts, exitCode))
                     logger.info("Restarting process {} (#{}) in {}", spec.name, restarts, budget.delay)
                     delay(budget.delay)
                     next = relaunch(restarts)
                 }
             } finally {
-                // po GaveUp proces neběží a pozůstatky zůstávají (odpojený launcher s RestartPolicy.NEVER) — uklidí je až stop()
+                // po GaveUp běh příkazu skončil; init namespace při tom uklidí jeho potomky.
                 if (!gaveUp) withContext(NonCancellable) { launched?.terminate(spec.gracefulStop) }
                 process = null
                 if (!gaveUp) setState(ProcessState.Stopped)
@@ -214,7 +209,9 @@ class ManagedProcess(
                 }
             }
 
-            val launched = launch(spec.command, spec.environment, spec.workingDirectory, spec.name) { redirectOutput(redirect) }
+            val launched = launch(spec.command, spec.environment, spec.workingDirectory, spec.name) {
+                redirectOutput(redirect)
+            }
             this.launched = launched
             process = launched.process
             runCatching { launched.process.outputStream.close() }
@@ -222,11 +219,6 @@ class ManagedProcess(
             setState(ProcessState.Running(launched.process.pid(), restarts))
             logger.info("Process {} started, PID {}", spec.name, launched.process.pid())
             return launched.process
-        }
-
-        /** SIGKILL procesům tohoto spuštění, které přežily rodiče ([Launched.killLeftovers]); bez `/proc` no-op. */
-        fun killLeftovers() {
-            launched?.killLeftovers()
         }
 
         /** Stav hlásí jen aktuální spuštění — stav předchozího watchdogu po novém [start] se zahodí. */
@@ -237,8 +229,4 @@ class ManagedProcess(
         }
     }
 
-    companion object {
-        /** env s id spuštění — dědí ho potomci, i ti, kteří přežijí rodiče */
-        const val INSTANCE_ENV = "KLIB_PROCESS_INSTANCE"
-    }
 }

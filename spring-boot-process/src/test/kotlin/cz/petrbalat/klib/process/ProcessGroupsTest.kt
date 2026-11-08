@@ -7,26 +7,26 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.io.TempDir
-import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /** Registr skupin bez Springu — eventy a vypnutí kontextu přes Spring testuje `ProcessAutoConfigurationTest`. */
+@RequiresPidNamespace
 class ProcessGroupsTest {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val gaveUp = CopyOnWriteArrayList<String>()
     private val restarting = CopyOnWriteArrayList<String>()
 
-    private val groups = processGroups("test") {
+    private val groups = processGroups {
         shutdownTimeout = 5.seconds
         onRestarting { group, name, _ -> restarting += "${group.id}/$name" }
         onGaveUp { group, giveUp -> gaveUp += "${group.id}/${giveUp.name}" }
@@ -63,27 +63,17 @@ class ProcessGroupsTest {
     }
 
     @Test
-    fun `stop po zrušení scope se vrátí až po úklidu, ne hned`(@TempDir proc: File) {
-        // konzument zruší scope akce (vedlejší joby) a pak skupinu zastaví — zrušení scope ji mezitím začne
-        // zastavovat samo (stopOnScopeCompletion); explicitní stop se nesmí vrátit dřív, než to doběhne.
-        // Falešný /proc se sirotkem skupiny a pomalý killer drží automatický stop v úklidu sirotků.
-        File(proc, "4242").mkdirs()
-        File(proc, "4242/environ").writeText("KLIB_PROCESS_TAG=test/action-7\u0000")
-        val killed = CopyOnWriteArrayList<Long>()
-        val tagging = ProcessTagging("test")
-        val slowReaper = ProcessReaper(tagging, proc) { pid ->
-            Thread.sleep(500)
-            killed += pid
-        }
-        val groups = ProcessGroups(tagging, slowReaper)
+    fun `stop po zrušení scope čeká na ukončení procesu`() {
         val actionScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
         val group = groups.create("action-7", actionScope)
+        val process = group.start { command("sleep", "1000") }
+        val pid = assertIs<ProcessState.Running>(process.state.value).pid
 
         actionScope.cancel()
         waitUntil { group.isStopped } // zastavuje se samo
         runBlocking { group.stop() }
 
-        assertEquals(listOf(4242L), killed, "stop se vrátil před úklidem sirotků")
+        assertFalse(isPidAlive(pid))
         assertNull(groups.find("action-7"), "skupina musí být po stop() pryč z registru")
     }
 

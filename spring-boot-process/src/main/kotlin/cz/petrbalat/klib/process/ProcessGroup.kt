@@ -48,27 +48,22 @@ internal class ProcessHooks(
 )
 
 /**
- * Procesy jedné jednotky práce (instance akce, ladicí běh…): všechny nesou tag `<owner>/<id>` v env,
- * jejich watchdogy běží ve [scope]. [stop] zastaví spuštěné procesy, navázanou práci a podle tagu dorazí i odpojené sirotky.
+ * Procesy jedné jednotky práce (instance akce, ladicí běh…); jejich watchdogy běží ve [scope]. [stop] zastaví
+ * spuštěné procesy a navázanou práci. Každý spravovaný proces má vlastní PID namespace.
  * Vytváří jen [ProcessGroups] — restart a vzdání se watchdogu předá jeho [ProcessGroupsListener].
  */
 @ProcessDsl
 class ProcessGroup internal constructor(
     val id: String,
-    private val tagging: ProcessTagging,
     private val scope: CoroutineScope,
-    private val reaper: ProcessReaper,
     internal val defaults: ProcessDefaults,
     private val listener: ProcessGroupListener,
 ) {
 
-    /** pro procesy spouštěné mimo [start] (segmenty cyklu, runProcess) */
-    val environment: Map<String, String> = tagging.environment(id)
-
     /** podle [ManagedProcess.name] — proces po GaveUp / stop nahradí nový stejného názvu */
     private val processes = ConcurrentHashMap<String, ManagedProcess>()
 
-    /** práce navázaná na skupinu (cykly segmentů, jednorázové příkazy) — stop() ji zruší a počká dřív než na reaper */
+    /** práce navázaná na skupinu (cykly segmentů, jednorázové příkazy) — stop() ji zruší a počká na její konec */
     private val attached: MutableSet<Job> = ConcurrentHashMap.newKeySet()
 
     // start (včetně forku) vs. přepnutí isStopped — stop() uprostřed startu by našel proces bez watchdogu a nezastavil ho
@@ -90,7 +85,7 @@ class ProcessGroup internal constructor(
     private var scopeCompletion: DisposableHandle? = null
 
     /**
-     * Konec [scope] bez [stop] (zrušený job akce) skupinu zastaví — dorazí odpojené sirotky a odebere ji z registru.
+     * Konec [scope] bez [stop] (zrušený job akce) skupinu zastaví a odebere ji z registru.
      * Volá jen `ProcessGroups` po zápisu do registru: dřív by duplicitní id zabilo procesy živé skupiny.
      */
     internal fun stopOnScopeCompletion() {
@@ -104,10 +99,10 @@ class ProcessGroup internal constructor(
         File(checkNotNull(defaults.logsDirectory) { "klib.process.logs-directory is not set" }, "$name.log")
 
     /**
-     * Spustí [ManagedProcess] s watchdogem; do env přidá tag skupiny (má přednost). [spec] je úplný — výchozí hodnoty
+     * Spustí [ManagedProcess] s watchdogem. [spec] je úplný — výchozí hodnoty
      * `klib.process.*` ([ProcessDefaults]) dosazuje až DSL `start(name) { }`. Název je ve skupině klíčem: běžící
      * proces stejného názvu → [IllegalStateException] (stav skupiny by se přepisoval); proces po GaveUp nebo zastavení
-     * nový stejného názvu nahradí — pozůstatky jeho posledního běhu se nejdřív zabijí.
+     * nový stejného názvu nahradí.
      */
     fun start(spec: ProcessSpec): ManagedProcess = start(spec, ProcessHooks())
 
@@ -117,7 +112,7 @@ class ProcessGroup internal constructor(
         val previous: ManagedProcess? = processes[name]
         check(previous?.isRunning != true) { "Process $name is already running in group $id — use a different name" }
         lateinit var process: ManagedProcess
-        process = ManagedProcess(spec.copy(environment = spec.environment + environment), scope) { s ->
+        process = ManagedProcess(spec, scope) { s ->
             // nahrazený proces (doběhnutý finally po stop) stav nového nepřepíše
             if (processes[name] === process) inCallback(s) {
                 _state.update { it + (name to s) }
@@ -136,7 +131,6 @@ class ProcessGroup internal constructor(
                 }
             }
         }
-        previous?.killLeftovers() // pozůstatky po GaveUp by blokovaly zařízení / profil
         processes[name] = process
         try {
             process.start()
@@ -165,7 +159,7 @@ class ProcessGroup internal constructor(
     }
 
     /**
-     * Stop navázaných cyklů a všech spuštěných procesů + [ProcessReaper.kill] — i odpojených sirotků. Doběhne i ve
+     * Stop navázaných cyklů a všech spuštěných procesů. Doběhne i ve
      * zrušené korutině (úklid ve `finally` jobu akce). Opakované volání se vrátí, až první stop doběhne (i souběžné
      * se zastavením po konci scope) — kromě volání zevnitř skupiny, viz [awaitStopped].
      */
@@ -198,9 +192,8 @@ class ProcessGroup internal constructor(
                 // stop() zevnitř cyklu (whilePlaying) na něj nečeká — čekal by sám na sebe
                 attached.forEach { it.cancel() }
                 if (currentCoroutineContext()[GroupWork]?.group !== this@ProcessGroup) attached.toList().joinAll()
-                // souběžně — jinak N × gracefulStop přeleze shutdownTimeout a reaper se nespustí
+                // souběžně — jinak N × gracefulStop přeleze shutdownTimeout
                 processes.values.map { launch { it.stop() } }.joinAll()
-                reaper.kill(id)
             }
         } finally {
             try {
@@ -214,7 +207,7 @@ class ProcessGroup internal constructor(
     }
 
     /**
-     * Souběžný stop počká na první — jinak by se volající vrátil s běžícími procesy a sirotky. Nečeká zevnitř
+     * Souběžný stop počká na první — jinak by se volající vrátil s běžícími procesy. Nečeká zevnitř
      * skupiny, čekal by sám na sebe: z callbacku watchdogu (první stop joinuje watchdog, např. při Restarting)
      * ani z navázaného cyklu (první stop joinuje cyklus, např. z whilePlaying).
      */
@@ -237,7 +230,7 @@ class ProcessGroup internal constructor(
         }
     }
 
-    override fun toString(): String = "ProcessGroup(${tagging.tag(id)})"
+    override fun toString(): String = "ProcessGroup($id)"
 
     private companion object {
         /** skupina, jejíž callback právě běží na tomto vlákně (vlákno watchdogu) */

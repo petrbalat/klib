@@ -8,7 +8,7 @@ přehled API, vlastnosti `klib.process.*` a omezení (jen Linux, `sudo`, init v 
 ## Příkazy
 
 ```bash
-./gradlew :spring-boot-process:test                                  # na hostu; na macOS se Linux testy přeskočí
+./gradlew :spring-boot-process:test                                  # na hostu; bez PID namespace (macOS) se namespace testy přeskočí
 ./gradlew :spring-boot-process:test --tests "*ManagedProcessTest"    # jedna třída
 ./gradlew :spring-boot-process:dockerTest                            # všechny testy v Linux kontejneru
 ./gradlew :spring-boot-process:build                                 # check → spustí i dockerTest, je-li Docker
@@ -16,9 +16,31 @@ přehled API, vlastnosti `klib.process.*` a omezení (jen Linux, `sudo`, init v 
 
 `dockerTest` (`buildSrc/src/main/kotlin/dockerTest.kt`) zkompiluje třídy na hostu, zesynchronizuje je s runtime
 classpath do `build/docker-test/cp` a v kontejneru pustí JUnit `ConsoleLauncher --scan-class-path` — nelze tedy
-filtrovat přes `--tests`, běží vždy všechno. Reporty: `build/test-results/dockerTest`. Bez dostupného Dockeru se
-task tiše přeskočí. Image (`src/dockerTest/Dockerfile`) napodobuje produkční kontejner CDC klienta: Debian trixie,
-OpenJDK 25, `tini` jako PID 1, uživatel uid 1000, `sudo` povolené jen na `/usr/bin/sleep`.
+filtrovat přes `--tests`, běží vždy všechno. Před spuštěním `dockerTestPreflight` ověří, že Docker runtime povolí
+user/PID namespace; pokud ne (např. AppArmor/userns omezení na CI agentovi), vypíše varování s výstupem `unshare`
+a `dockerTest` přeskočí — s `-Pklib.process.requirePidNamespace=true` build selže. Reporty:
+`build/test-results/dockerTest`; bez dostupného Dockeru se task přeskočí.
+Dockerfile a bezpečnostní volby napodobují CDC: Debian trixie, OpenJDK 25, `pi` uid 1000, skupiny zařízení,
+`tini -s`, `SYS_ADMIN`, `seccomp=unconfined`, `systempaths=unconfined` a `apparmor=unconfined` (`docker-default`
+  profil má `deny mount`); bez `--privileged` a hostitelských cgroups.
+
+Každý `ManagedProcess` i segment cyklu používá povinně `unshare --user --map-current-user --pid --fork --kill-child --mount-proc`
+a vnitřní `/usr/bin/tini -g`. Vyžaduje Linux, util-linux, `tini` a povolený user/PID namespace. Stop posílá SIGTERM
+vnitřnímu `tini`, po `gracefulStop` zabije wrapper; `Duration.ZERO` zabije wrapper hned. Debian util-linux 2.41.5
+SIGTERM wrapperu ignoruje. Konec hlavního procesu uklidí namespace potomky; pád JVM sám wrapper nezastaví, dokud
+neskončí kontejner. `--mount-proc` dává namespace vlastní `/proc` (PID v `/proc` odpovídají `getpid()`); vyžaduje
+`systempaths=unconfined`, mount namespace je private (pozdější mounty kontejneru proces neuvidí).
+
+Autokonfigurace po startu volá `checkPidNamespaceSupport()` a při selhání jen loguje ERROR (AOT trénink v `docker build`
+má výchozí seccomp a `unshare --user` tam neprojde).
+
+`runProcess` je ve výchozím stavu přímý proces mimo namespace pro `sudo`/mount příkazy a spravuje pouze jeho hlavní
+PID; `isolated = true` použije stejný `launch` jako `ManagedProcess` a timeout/zrušení zabije wrapper (`--kill-child`).
+`ProcessGroup` už netaguje env ani neprohledává `/proc`; `owner` v Springu je jen pro metriky a události.
+`PidNamespaceManagedProcessTest` ověřuje produkční cestu přes `ManagedProcess`, signály, eskalaci, restart a úklid
+odpojených potomků; `UnshareProcessTest` doplňuje kontext a chování jádra. Testovací fixture `root:video` je čitelný
+i při výpisu nemapované skupiny jako `nogroup`. Skutečná zařízení a Wayland ověřil provoz na RPi s CDC (2026-11-08):
+video (mpv), Chromium i LibreOffice se v namespace přehrávají.
 
 ## Architektura
 
@@ -26,9 +48,9 @@ Tři vrstvy; Spring zná jen `autoconfigure`:
 
 - **Jádro (`cz.petrbalat.klib.process`, bez Springu)** — `ProcessSpec` (neměnný popis procesu), `ManagedProcess`
   (watchdog), `RestartBudget`, `ProcessGroup`, `ProcessGroups` (továrna + registr, `ProcessGroupsListener`),
-  `ProcessTagging`, `ProcessReaper`, top-level `runProcess`, `Process.stopGracefully`, `ProcessOutput` + `rotateLog`.
+  top-level `runProcess`, `ProcessOutput` + `rotateLog`; všechny spravované procesy běží v PID namespace.
   DSL: `ProcessDsl.kt` (`command`, `sudo`, `processSpec`, buildery) a `processGroupDsl.kt` (`group.start(name) { }`,
-  `withGroup`, `processGroups(owner) { }`).
+  `withGroup`, `processGroups { }`).
 - **`autoconfigure`** (jen s `klib.process.owner`) — `ProcessProperties` (`klib.process.*`), bean `ProcessGroups`
   s `ProcessEventPublisher` (listener → `ProcessRestartedEvent` / `ProcessGaveUpEvent`), `MicrometerProcessMetrics`.
   Registrace v `META-INF/spring/...AutoConfiguration.imports`.
@@ -39,26 +61,13 @@ Tři vrstvy; Spring zná jen `autoconfigure`:
 ### Tok zastavení
 `ProcessGroup.stop()` → zruší navázané cykly segmentů (`attach`, `SegmentCyclePlayer` s `group`) a počká na ně — jinak
 by po zastavení procesů spustily další segment; zevnitř cyklu (kontext `GroupWork`, např. `whilePlaying`) nečeká, čekal
-by sám na sebe → `ManagedProcess.stop()` (zruší coroutine watchdogu) → `finally` watchdogu v `NonCancellable`
-volá `Launched.terminate` (`stopGracefully`: potomky sesbírá **před** `destroy()`, SIGTERM → `gracefulStop` → SIGKILL
-rodiče, pak SIGKILL potomků; pak pozůstatky podle `INSTANCE_ENV`) → `ProcessReaper.kill(groupId)` dorazí procesy, které
-se odpojily (`setsid`) a nejsou už ve stromu.
+by sám na sebe → `ManagedProcess.stop()` zruší watchdog → `Launched.terminate` pošle SIGTERM vnitřnímu `tini -g`,
+čeká `gracefulStop` a při timeoutu zabije wrapper `unshare`. Jádro při smrti PID 1 uklidí celý namespace včetně
+odpojených potomků. `Duration.ZERO` zabije wrapper bez SIGTERM.
 
-Potomky, které přežily pád rodiče (spadlý wrapper), strom už nevrátí. Každé spuštění proto nese env
-`KLIB_PROCESS_INSTANCE=<uuid>` a watchdog je podle něj (`Launched.killLeftovers`, jen Linux) zabije před restartem,
-v `finally` a v `stop()` po `GaveUp`. Při samotném `GaveUp` záměrně ne — odpojený launcher s `RestartPolicy.NEVER`.
-`runProcess` při timeoutu i zrušení volá `Launched.terminate(Duration.ZERO)` (rovnou SIGKILL), po normálním konci jen
-`killLeftovers` (potomek, který drží rouru výstupu); po timeoutu nečeká `waitFor()` bez limitu (proces v D stavu →
-`exitValue = null`). Proces vzniká jen v `launch()` (`Launched.kt`: env volajícího, nové `INSTANCE_ENV`, pracovní
-adresář) a jedno spuštění se zabíjí jen přes `Launched` — místo pro process group nebo izolaci
-(`resources/features/refac-proces.md` kap. 7 a 8). Zabíjení podle env jde přes `killByEnv` (`ProcessReaper.kt`).
-
-### Tagování
-Každý proces skupiny dostane env `<envName>=<owner>/<groupId>` (výchozí `KLIB_PROCESS_TAG`), dědí ho i potomci.
-`ProcessReaper` čte `/proc/<pid>/environ`; `killAllOwned` porovnává prefix `"$owner/"` (proto `owner` nesmí obsahovat
-`/`). `ProcessGroups.reapOrphans()` (autokonfigurace ho volá při vytvoření beanu) zabije sirotky vlastníka z minulého
-běhu JVM. Název procesu je ve skupině klíčem: běžící proces stejného názvu → `IllegalStateException`, proces po GaveUp /
-stop nový stejného názvu nahradí (pozůstatky nejdřív zabije).
+`runProcess` bez `isolated` namespace nepoužívá: při timeoutu/zrušení ukončí jen přímý proces. Potomci, kteří drží
+zděděnou rouru, mohou přežít `OUTPUT_GRACE`; výstup se vrátí bez dalšího úklidu. S `isolated` skončí namespace
+s příkazem, takže roura dostane EOF hned.
 
 ### Stav a události
 Každé `ManagedProcess.start()` je samostatná inkarnace (`Run`: vlastní `Launched`, `gaveUp`, job) —
@@ -103,7 +112,7 @@ v balíčku Boot 4 i Boot 3 — bez toho `@ConditionalOnBean(MeterRegistry)` bea
   — kromě `IntervalScheduler.schedule`: varianta se třemi lambdami byla past (trailing lambda = `awaitReady`).
 - Výstup `ManagedProcess` jde přes OS redirect (`Discard` / `appendTo` souboru s rotací), nikdy přes rouru do JVM —
   tu by nikdo nečetl a proces by se zablokoval. `runProcess` naopak čte výstup souběžně na virtuálních vláknech.
-- Watchdog startuje s `CoroutineStart.UNDISPATCHED` (aby `finally` proběhl i ve zrušeném scope), úklid ve `finally`
+- Watchdog startuje s `CoroutineStart.ATOMIC` (aby `finally` proběhl i ve zrušeném scope, ale callback neběžel pod zámky startu), úklid ve `finally`
   běží v `NonCancellable`, délka běhu se měří `TimeSource.Monotonic`. V blocích `catch (e: Throwable)` se
   `CancellationException` vždy znovu vyhazuje.
 - KDoc a komentáře česky, log zprávy a texty výjimek anglicky.
@@ -115,14 +124,18 @@ v balíčku Boot 4 i Boot 3 — bez toho `@ConditionalOnBean(MeterRegistry)` bea
 - Pomůcky v `src/test/.../testUtils.kt`: `StateFlow.await { }` místo pollingu stavů, `waitUntil { }` pro `/proc`
   a soubory, `fixture(name)` vrací cestu ke skriptu ze `src/test/resources/fixtures` — spouští se vždy jako
   `listOf("sh", fixture("x.sh"))`, takže na spustitelných právech po kopírování resources nezáleží.
-- Fixtures simulují konkrétní chování: `forker.sh` (Chromium s renderery), `detacher.sh` (`chrome_crashpad_handler` → `setsid`),
-  `ignore-term.sh` (ignoruje SIGTERM), `crash-loop.sh` (pád s kódem 3), `chatty.sh` (výstup > 64 KB),
-  `orphan-on-crash.sh` (wrapper spadne, potomek běží dál — `oosplash` → `soffice.bin`; PID zapíše do souboru z `$1`).
-- Linux-only testy mají `@EnabledOnOs(OS.LINUX)`, případně `@EnabledIf("...#underInit")` (PID 1 je `tini`) nebo
-  `"...#sudoAvailable"`. Na macOS se přeskočí — ověř je přes `dockerTest`.
-- `ProcessReaper` má v konstruktoru `procDirectory` a `killer` — `ProcessReaperTest` staví falešný `/proc` v `@TempDir`.
+- Fixtures simulují konkrétní chování: `forker.sh` (Chromium s renderery), `ignore-term.sh` (ignoruje SIGTERM),
+  `crash-loop.sh` (pád s kódem 3), `chatty.sh` (výstup > 64 KB).
+- Podmínky v `testConditions.kt`: test, který spouští spravovaný proces (`ManagedProcess`, `start`, segment cyklu,
+  `runProcess` s `isolated`), má `@RequiresPidNamespace` (běží jen tam, kde projde `checkPidNamespaceSupport()`);
+  test závislý na testovacím image (uživatel `pi`, skupiny zařízení) má `@RequiresDockerTestImage`
+  (`KLIB_PROCESS_DOCKER_TEST=true` z Dockerfile), `sudo` test `@EnabledIf("...#sudoAvailable")`. Ostatní testy
+  (DSL, `runProcess` bez `isolated`, binding autokonfigurace, stop cyklu) běží bez podmínky i na macOS.
+  `@EnabledOnOs(OS.LINUX)` nepoužívej — namespace testy ověř přes `dockerTest`.
+- `UnshareProcessTest` ověřuje chování namespace; `PidNamespaceManagedProcessTest` testuje přímo povinnou produkční
+  cestu `ManagedProcess`, bez zvláštní proměnné prostředí nebo DSL přepínače.
   `ProcessGroup` má internal konstruktor; testy ho vytvářejí přímo s `object : ProcessGroupListener {}`, nebo přes
-  `ProcessGroups(ProcessTagging("test"))` / `processGroups("test") { }` bez Springu.
+  `ProcessGroups()` / `processGroups { }` bez Springu.
 - `IntervalScheduler` s posunutými hodinami: `IntervalSchedulerClockTest` (`MovableClock` — skok NTP, letní čas).
   `SegmentCyclePlayerTest` sleduje přehrání přes `nowPlaying` kolektorem na `Dispatchers.Unconfined` (nic nepřeskočí).
 - Autokonfigurace se testuje přes `ApplicationContextRunner` s `klib.process.owner` (bez něj se autokonfigurace nezapne).

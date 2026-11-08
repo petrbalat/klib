@@ -1,9 +1,8 @@
 package cz.petrbalat.klib.process.autoconfigure
 
+import cz.petrbalat.klib.process.RequiresPidNamespace
 import cz.petrbalat.klib.process.ProcessGroups
-import cz.petrbalat.klib.process.ProcessReaper
 import cz.petrbalat.klib.process.ProcessState
-import cz.petrbalat.klib.process.ProcessTagging
 import cz.petrbalat.klib.process.RestartPolicy
 import cz.petrbalat.klib.process.await
 import cz.petrbalat.klib.process.isPidAlive
@@ -20,8 +19,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import org.springframework.boot.autoconfigure.AutoConfigurations
 import org.springframework.boot.test.context.runner.ApplicationContextRunner
 import org.springframework.context.event.EventListener
@@ -29,6 +26,7 @@ import java.io.File
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
+import kotlin.concurrent.thread
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
@@ -54,24 +52,18 @@ class ProcessAutoConfigurationTest {
     @Test
     fun `binding klib-process`() {
         runner.withPropertyValues(
-            "klib.process.env-name=APP_TAG",
             "klib.process.logs-directory=/tmp/klib-logs",
             "klib.process.restart.max-restarts=3",
             "klib.process.restart.delay=100ms",
             "klib.process.restart.stable-run=1m",
             "klib.process.graceful-stop=1s",
-            "klib.process.reap-orphans-on-startup=false",
         ).run { context ->
-            val tagging = context.getBean(ProcessTagging::class.java)
-            assertEquals("it-test", tagging.owner)
-            assertEquals("APP_TAG", tagging.envName)
-
             val defaults = context.getBean(ProcessProperties::class.java).toDefaults()
             assertEquals(RestartPolicy(maxRestarts = 3, delay = 100.milliseconds, stableRun = 1.minutes), defaults.restart)
             assertEquals(File("/tmp/klib-logs"), defaults.logsDirectory)
+            assertEquals("it-test", context.getBean(ProcessProperties::class.java).owner)
 
             val group = context.getBean(ProcessGroups::class.java).create("g", scope)
-            assertEquals(mapOf("APP_TAG" to "it-test/g"), group.environment)
             assertEquals(File("/tmp/klib-logs/x.log"), group.logFile("x"))
         }
     }
@@ -83,28 +75,11 @@ class ProcessAutoConfigurationTest {
             .run { context ->
                 assertNull(context.startupFailure)
                 assertFalse(context.containsBean("processGroups"))
-                assertTrue(context.getBeansOfType(ProcessReaper::class.java).isEmpty())
             }
     }
 
     @Test
-    @EnabledOnOs(OS.LINUX)
-    fun `sirotek vlastníka z minulého běhu po startu kontextu nežije`() {
-        val orphan = ProcessBuilder("sleep", "1000").apply { environment()["KLIB_PROCESS_TAG"] = "it-test/old-1" }.start()
-        val foreign = ProcessBuilder("sleep", "1000").apply { environment()["KLIB_PROCESS_TAG"] = "it-other/old-1" }.start()
-        try {
-            runner.run { context ->
-                assertNull(context.startupFailure)
-                waitUntil { !orphan.isAlive }
-                assertTrue(foreign.isAlive)
-            }
-        } finally {
-            orphan.destroyForcibly()
-            foreign.destroyForcibly()
-        }
-    }
-
-    @Test
+    @RequiresPidNamespace
     fun `zavření kontextu zastaví skupinu, kterou aplikace nezastavila`() {
         lateinit var pid: Number
         runner.run { context ->
@@ -117,6 +92,7 @@ class ProcessAutoConfigurationTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `PreDestroy aplikace zastaví svou skupinu dřív než pojistka ProcessGroups`() {
         val log = CopyOnWriteArrayList<String>()
         runner.withBean(Recorder::class.java, { Recorder(scope, log) })
@@ -126,6 +102,7 @@ class ProcessAutoConfigurationTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `ProcessGaveUpEvent dorazí právě jednou, po stop se nepublikuje`() {
         runner.withBean(GaveUpListener::class.java).run { context ->
             val groups = context.getBean(ProcessGroups::class.java)
@@ -169,6 +146,7 @@ class ProcessAutoConfigurationTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `zrušený scope bez stop skupinu zastaví a odebere z registru`() {
         runner.run { context ->
             val groups = context.getBean(ProcessGroups::class.java)
@@ -187,6 +165,7 @@ class ProcessAutoConfigurationTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `metriky jen s MeterRegistry v kontextu`() {
         runner.run { context -> assertFalse(context.containsBean("processMetrics")) }
 
@@ -205,6 +184,7 @@ class ProcessAutoConfigurationTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `listener ProcessGaveUpEvent smí skupinu synchronně zastavit`() {
         runner.withBean(StoppingGaveUpListener::class.java).run { context ->
             val groups = context.getBean(ProcessGroups::class.java)
@@ -212,13 +192,22 @@ class ProcessAutoConfigurationTest {
 
             // aplikace po vyčerpání restartů ukončí akci a ukáže chybovou obrazovku
             val group = groups.create("gave-up-stop", scope)
-            group.start { command("sh", "-c", "exit 1"); noRestart() }
-
-            listener.entered.get(5, TimeUnit.SECONDS)
-            val stopped = runCatching { listener.stopped.get(5, TimeUnit.SECONDS) }
-            assertTrue(stopped.isSuccess, "stop skupiny v listeneru se zasekl (čeká na watchdog, ze kterého je volaný)")
-            assertTrue(group.isStopped)
-            assertNull(groups.find("gave-up-stop"))
+            val started = CompletableFuture<Unit>()
+            val starter = thread(isDaemon = true) {
+                runCatching { group.start { command("sh", "-c", "exit 1"); noRestart() } }
+                    .fold({ started.complete(Unit) }, started::completeExceptionally)
+            }
+            try {
+                started.get(5, TimeUnit.SECONDS)
+                listener.entered.get(5, TimeUnit.SECONDS)
+                val stopped = runCatching { listener.stopped.get(5, TimeUnit.SECONDS) }
+                assertTrue(stopped.isSuccess, "stop skupiny v listeneru se zasekl (čeká na watchdog, ze kterého je volaný)")
+                assertTrue(group.isStopped)
+                assertNull(groups.find("gave-up-stop"))
+            } finally {
+                starter.interrupt()
+                starter.join(1_000)
+            }
         }
     }
 

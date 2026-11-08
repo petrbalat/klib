@@ -45,8 +45,8 @@ class GroupProcessBuilder internal constructor(private val group: ProcessGroup) 
 }
 
 /**
- * Spustí proces skupiny popsaný v [block]; výchozí hodnoty z `klib.process.*` ([ProcessDefaults]), tag skupiny
- * se přidá do env. [name] je klíč ve skupině, null = název binárky.
+ * Spustí proces skupiny popsaný v [block]; výchozí hodnoty z `klib.process.*` ([ProcessDefaults]).
+ * [name] je klíč ve skupině, null = název binárky.
  */
 fun ProcessGroup.start(name: String? = null, block: GroupProcessBuilder.() -> Unit): ManagedProcess {
     val builder = GroupProcessBuilder(this).apply { this.name = name }.apply(block)
@@ -72,9 +72,7 @@ suspend fun <T> ProcessGroups.withGroup(id: String, block: suspend ProcessGroup.
 
 /** Registr skupin bez Springu; ve Spring Bootu ho dává autokonfigurace z `klib.process.*`. */
 @ProcessDsl
-class ProcessGroupsBuilder internal constructor(private val owner: String) {
-    var envName: String = "KLIB_PROCESS_TAG"
-
+class ProcessGroupsBuilder internal constructor() {
     /** základ pro [ProcessGroup.logFile] a `logToFile()` */
     var logsDirectory: File? = null
 
@@ -102,10 +100,7 @@ class ProcessGroupsBuilder internal constructor(private val owner: String) {
     }
 
     internal fun build(): ProcessGroups {
-        val tagging = ProcessTagging(owner, envName)
         return ProcessGroups(
-            tagging = tagging,
-            reaper = ProcessReaper(tagging),
             defaults = ProcessDefaults(restart, gracefulStop, logsDirectory),
             listener = object : ProcessGroupsListener {
                 override fun restarting(group: ProcessGroup, name: String, restarting: ProcessState.Restarting) =
@@ -119,8 +114,7 @@ class ProcessGroupsBuilder internal constructor(private val owner: String) {
 }
 
 /**
- * Registr skupin vlastníka [owner] bez Springu. Sirotky z minulého běhu JVM nezabíjí — zavolej
- * [ProcessGroups.reapOrphans]; skupiny, které aplikace nezastavila, zastaví [ProcessGroups.close].
+ * Registr skupin procesů bez Springu; skupiny, které aplikace nezastavila, zastaví [ProcessGroups.close].
  */
-fun processGroups(owner: String, block: ProcessGroupsBuilder.() -> Unit = {}): ProcessGroups =
-    ProcessGroupsBuilder(owner).apply(block).build()
+fun processGroups(block: ProcessGroupsBuilder.() -> Unit = {}): ProcessGroups =
+    ProcessGroupsBuilder().apply(block).build()

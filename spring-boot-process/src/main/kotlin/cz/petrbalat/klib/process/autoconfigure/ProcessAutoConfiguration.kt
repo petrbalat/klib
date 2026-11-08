@@ -1,9 +1,10 @@
 package cz.petrbalat.klib.process.autoconfigure
 
 import cz.petrbalat.klib.process.ProcessGroups
-import cz.petrbalat.klib.process.ProcessReaper
-import cz.petrbalat.klib.process.ProcessTagging
+import cz.petrbalat.klib.process.checkPidNamespaceSupport
 import io.micrometer.core.instrument.MeterRegistry
+import org.slf4j.LoggerFactory
+import org.springframework.boot.ApplicationRunner
 import org.springframework.boot.autoconfigure.AutoConfiguration
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass
@@ -22,18 +23,10 @@ import kotlin.time.toKotlinDuration
         "org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration",
     ],
 )
-// bez owner se nezapne — modul jde použít jen kvůli runProcess / IntervalScheduler (a start nezabíjí cizí procesy)
+// bez owner se nezapne — slouží jako identifikátor metrik a událostí
 @ConditionalOnProperty("klib.process.owner")
 @EnableConfigurationProperties(ProcessProperties::class)
 class ProcessAutoConfiguration {
-
-    @Bean
-    @ConditionalOnMissingBean
-    fun processTagging(properties: ProcessProperties) = ProcessTagging(properties.owner, properties.envName)
-
-    @Bean
-    @ConditionalOnMissingBean
-    fun processReaper(tagging: ProcessTagging) = ProcessReaper(tagging)
 
     /**
      * Destroy = odvozené `close()` (AutoCloseable), záměrně ne `SmartLifecycle`: `Lifecycle.stop()` běží před
@@ -44,16 +37,24 @@ class ProcessAutoConfiguration {
     @ConditionalOnMissingBean
     fun processGroups(
         properties: ProcessProperties,
-        tagging: ProcessTagging,
-        reaper: ProcessReaper,
         publisher: ApplicationEventPublisher,
     ): ProcessGroups = ProcessGroups(
-        tagging = tagging,
-        reaper = reaper,
         defaults = properties.toDefaults(),
-        listener = ProcessEventPublisher(publisher, tagging.owner),
+        listener = ProcessEventPublisher(publisher, properties.owner),
         shutdownTimeout = properties.shutdownTimeout.toKotlinDuration(),
-    ).also { if (properties.reapOrphansOnStartup) it.reapOrphans() }
+    )
+
+    /**
+     * Kontrola namespace po startu — jen ERROR do logu, ne pád: AOT trénink v `docker build` běží s výchozím
+     * seccompem, kde `unshare --user` neprojde, a klient má i bez akcí hlásit stav na server.
+     */
+    @Bean
+    fun pidNamespaceStartupCheck() = ApplicationRunner {
+        runCatching { checkPidNamespaceSupport() }.onFailure {
+            LoggerFactory.getLogger(ProcessAutoConfiguration::class.java)
+                .error("Managed processes will not start — {}", it.message)
+        }
+    }
 
     @Configuration(proxyBeanMethods = false)
     @ConditionalOnClass(MeterRegistry::class)
@@ -62,6 +63,6 @@ class ProcessAutoConfiguration {
         @Bean
         @ConditionalOnBean(MeterRegistry::class)
         @ConditionalOnMissingBean
-        fun processMetrics(registry: MeterRegistry, tagging: ProcessTagging) = MicrometerProcessMetrics(registry, tagging.owner)
+        fun processMetrics(registry: MeterRegistry, properties: ProcessProperties) = MicrometerProcessMetrics(registry, properties.owner)
     }
 }

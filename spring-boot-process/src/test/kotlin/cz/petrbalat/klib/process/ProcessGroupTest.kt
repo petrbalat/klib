@@ -36,7 +36,6 @@ class ProcessGroupTest {
     lateinit var logs: File
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val tagging = ProcessTagging("test")
     private val gaveUp = CopyOnWriteArrayList<GiveUp>()
     private val restarts = AtomicInteger()
     private val stopped = CopyOnWriteArrayList<String>()
@@ -55,9 +54,8 @@ class ProcessGroupTest {
         }
     }
 
-    private fun group(id: String = "12-3", defaults: ProcessDefaults = ProcessDefaults(logsDirectory = logs)) = ProcessGroup(
-        id, tagging, scope, ProcessReaper(tagging), defaults, listener,
-    )
+    private fun group(id: String = "12-3", defaults: ProcessDefaults = ProcessDefaults(logsDirectory = logs)) =
+        ProcessGroup(id, scope, defaults, listener)
 
     @AfterEach
     fun tearDown() {
@@ -65,25 +63,26 @@ class ProcessGroupTest {
     }
 
     @Test
-    fun `proces i jeho potomci dostanou tag skupiny`() {
+    @RequiresPidNamespace
+    fun `proces zachová env z DSL`() {
         val group = group()
         val log = File(logs, "mpv-12.log")
 
-        // potomek (vnořený sh) env dědí — podle toho reaper dorazí sirotky
         group.start("mpv-12") {
-            command("sh", "-c", "sh -c 'echo \$KLIB_PROCESS_TAG \$EXTRA'; sleep 5")
+            command("sh", "-c", "sh -c 'echo \$EXTRA'; sleep 5")
             env("EXTRA", "x")
             logToFile()
         }
         try {
             waitUntil { log.exists() && log.readText().isNotBlank() }
-            assertEquals("test/12-3 x", log.readText().trim())
+            assertEquals("x", log.readText().trim())
         } finally {
             runBlocking { group.stop() }
         }
     }
 
     @Test
+    @RequiresPidNamespace
     fun `vzdání se watchdogu dorazí do listeneru s GiveUp, restarty se počítají`() {
         val group = group()
         val log = File(logs, "imv.log")
@@ -103,6 +102,7 @@ class ProcessGroupTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `po stop skupiny se vzdání nehlásí`() {
         val group = group()
         val process = group.start { command("sleep", "10"); noRestart() }
@@ -116,6 +116,7 @@ class ProcessGroupTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `stav skupiny obsahuje všechny procesy podle názvu`() {
         val group = group()
         group.start("player") { command("sleep", "10") }
@@ -132,6 +133,7 @@ class ProcessGroupTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `druhý běžící proces stejného názvu selže a první nechá běžet`() {
         val group = group()
         val first = group.start { command("sleep", "10") }
@@ -146,12 +148,13 @@ class ProcessGroupTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `start(spec) bere spec beze změn - výchozí hodnoty skupiny dosazuje jen DSL`() {
         val group = group(defaults = ProcessDefaults(restart = RestartPolicy(maxRestarts = 3), gracefulStop = 1.seconds))
         val spec = ProcessSpec(listOf("sleep", "10"), environment = mapOf("A" to "1"))
         try {
             val process = group.start(spec)
-            assertEquals(spec.copy(environment = mapOf("A" to "1", "KLIB_PROCESS_TAG" to "test/12-3")), process.spec)
+            assertEquals(spec, process.spec)
         } finally {
             runBlocking { group.stop() }
         }
@@ -159,7 +162,7 @@ class ProcessGroupTest {
 
     @Test
     fun `logFile bez logs-directory selže`() {
-        val group = ProcessGroup("1", tagging, scope, ProcessReaper(tagging), ProcessDefaults(), listener)
+        val group = ProcessGroup("1", scope, ProcessDefaults(), listener)
         assertFailsWith<IllegalStateException> { group.logFile("x") }
     }
 
@@ -175,6 +178,7 @@ class ProcessGroupTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `souběžný stop se vrátí až po doběhnutí prvního`() {
         val group = group()
         // ignoruje SIGTERM → první stop trvá celý gracefulStop
@@ -197,6 +201,7 @@ class ProcessGroupTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `stop z onRestarting během souběžného stopu neuvázne`() {
         val group = group()
         val inHook = CompletableFuture<Unit>()
@@ -221,6 +226,7 @@ class ProcessGroupTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `synchronní stop z onRestarting doběhne bez uváznutí`() {
         val group = group()
         val hookDone = CompletableFuture<Unit>()
@@ -246,6 +252,7 @@ class ProcessGroupTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `stop zastaví procesy skupiny souběžně, ne N × gracefulStop`() {
         val group = group()
         // ignoruje SIGTERM → každý stop čeká celý gracefulStop
@@ -262,12 +269,12 @@ class ProcessGroupTest {
     }
 
     @Test
-    fun `runProcess vrací výsledek příkazu s tagem skupiny`() = runBlocking {
+    fun `runProcess zachová explicitní env bez úpravy skupinou`() = runBlocking {
         val group = group()
         try {
-            val result = group.runProcess("sh", "-c", "printf '%s' \"\$KLIB_PROCESS_TAG\"")
+            val result = group.runProcess("sh", "-c", "printf '%s' \"\$CUSTOM\"") { env("CUSTOM", "from-caller") }
             assertTrue(result.success)
-            assertEquals("test/12-3", result.output)
+            assertEquals("from-caller", result.output)
         } finally {
             group.stop()
         }
@@ -308,6 +315,7 @@ class ProcessGroupTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `stop volaný ve finally zrušené korutiny procesy přesto zastaví`() {
         val group = group()
         val process = group.start { command("sleep", "1000"); noRestart() }
@@ -330,6 +338,7 @@ class ProcessGroupTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `souběžný start a stop skupiny nenechá běžet žádný proces`() {
         // konec akce (stop) se potká se spouštěním dalšího procesu téže akce (segment, helper)
         val started = CopyOnWriteArrayList<ManagedProcess>()
@@ -354,6 +363,7 @@ class ProcessGroupTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `po GaveUp jde proces skupiny pod stejným názvem spustit znovu`() {
         val group = group()
         val marker = File(logs, "ready")
@@ -379,18 +389,18 @@ class ProcessGroupTest {
     }
 
     @Test
-    fun `env od volajícího nepřepíše tag skupiny`() {
+    @RequiresPidNamespace
+    fun `proces zachová env z volajícího`() {
         val group = group()
-        val log = File(logs, "tag.log")
-        // jinak by proces unikl úklidu skupiny podle tagu
+        val log = File(logs, "env.log")
         group.start {
-            command("sh", "-c", "echo \$KLIB_PROCESS_TAG; sleep 5")
-            env("KLIB_PROCESS_TAG", "test/other")
+            command("sh", "-c", "echo \$APP_TAG; sleep 5")
+            env("APP_TAG", "caller/value")
             logTo(log)
         }
         try {
             waitUntil { log.exists() && log.readText().isNotBlank() }
-            assertEquals("test/12-3", log.readText().trim())
+            assertEquals("caller/value", log.readText().trim())
         } finally {
             runBlocking { group.stop() }
         }

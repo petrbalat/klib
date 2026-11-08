@@ -86,7 +86,7 @@ fun segment(duration: Duration, block: SegmentBuilder.() -> Unit): Segment = Seg
  *  - Spadlý proces segment ukončí dřív (nejdřív po `minSegment`) — další segment přijde hned, ne po celé délce.
  *  - Ukončení = [stop] → `finally` v cyklu zastaví běžící proces.
  *  - Cyklus běží ve [scope] — jeho zrušení zruší i cyklus.
- *  - S [group] nesou segmenty tag skupiny a [ProcessGroup.stop] cyklus zruší a počká na něj — po zastavení
+ *  - S [group] [ProcessGroup.stop] cyklus zruší a počká na něj — po zastavení
  *    skupiny už další segment nezačne.
  */
 class SegmentCyclePlayer(
@@ -96,7 +96,7 @@ class SegmentCyclePlayer(
      * bez ní by cyklus v těsné smyčce spouštěl a zabíjel procesy.
      */
     private val minSegment: Duration = 5.seconds,
-    /** skupina, jejíž tag segmenty nesou a jejíž stop cyklus ukončí; null = samostatný cyklus */
+    /** skupina, jejíž stop cyklus ukončí; null = samostatný cyklus */
     private val group: ProcessGroup? = null,
 ) {
 
@@ -178,10 +178,9 @@ class SegmentCyclePlayer(
         val startedAt = TimeSource.Monotonic.markNow()
         // coroutineScope → watchdog i souběžná akce jsou děti cyklu, zrušení cyklu je zruší taky
         coroutineScope {
-            // bez restartu — životní cyklus řídí cyklus, ne watchdog; tag skupiny má přednost
+            // bez restartu — životní cyklus řídí cyklus, ne watchdog
             val spec = segment.spec.copy(
                 restart = RestartPolicy.NEVER,
-                environment = segment.spec.environment + group?.environment.orEmpty(),
             )
             val process = ManagedProcess(spec, this).apply { start() }
             _nowPlaying.value = NowPlaying(segment, process, startedAt)
@@ -236,7 +235,7 @@ class SegmentCyclePlayer(
 
 /**
  * Cyklus segmentů skupiny v aktuální korutině — běží, dokud ji nikdo nezruší nebo se nezastaví skupina (pak se vrátí).
- * Segmenty nesou tag skupiny; [ProcessGroup.stop] cyklus nejdřív zruší a počká na něj, takže po zastavení skupiny
+ * [ProcessGroup.stop] cyklus nejdřív zruší a počká na něj, takže po zastavení skupiny
  * už další segment nezačne. Kdo potřebuje [SegmentCyclePlayer.nowPlaying], vytvoří přehrávač se `group` sám.
  */
 suspend fun ProcessGroup.playCycle(

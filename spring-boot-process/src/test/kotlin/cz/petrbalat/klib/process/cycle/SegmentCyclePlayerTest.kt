@@ -1,5 +1,6 @@
 package cz.petrbalat.klib.process.cycle
 
+import cz.petrbalat.klib.process.RequiresPidNamespace
 import cz.petrbalat.klib.process.RestartPolicy
 import cz.petrbalat.klib.process.processGroups
 import cz.petrbalat.klib.process.waitUntil
@@ -66,6 +67,7 @@ class SegmentCyclePlayerTest {
     // ============================================================
 
     @Test
+    @RequiresPidNamespace
     fun `spadlý proces segment ukončí dřív, nečeká se celá délka`() = runBlocking {
         val events = ConcurrentLinkedQueue<String>()
         val crashing = segment(BLOCKING_MS) {
@@ -83,6 +85,7 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `cyklus prochází segmenty v pořadí a opakuje se`() = runBlocking {
         val events = ConcurrentLinkedQueue<String>()
         val a = segment(SEGMENT_MS) { prepare { events.add("a") } }
@@ -102,6 +105,7 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `provider segmentů se volá znovu na začátku každého cyklu`() = runBlocking {
         val calls = AtomicInteger(0)
 
@@ -118,6 +122,7 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `vždy běží nejvýše jeden proces`() = runBlocking {
         val segments = List(3) { segment(SEGMENT_MS) }
         player.start("test-cycle") { segments }
@@ -135,6 +140,7 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `proces se zastaví po uplynutí délky segmentu a naváže další`() = runBlocking {
         val first = segment(2 * SEGMENT_MS)
         val second = segment(10_000)
@@ -152,6 +158,7 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `nulová délka segmentu se zvedne na minimum - žádná těsná smyčka`() = runBlocking {
         val starts = AtomicInteger(0)
         val seg = segment(0) { prepare { starts.incrementAndGet() } }
@@ -169,6 +176,7 @@ class SegmentCyclePlayerTest {
     // ============================================================
 
     @Test
+    @RequiresPidNamespace
     fun `stop zastaví běžící proces i smyčku`() = runBlocking {
         val calls = AtomicInteger(0)
         val seg = segment(10_000)
@@ -190,6 +198,7 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `druhý start běžícího cyklu selže, po stop projde`() = runBlocking {
         val seg = segment(10_000)
         player.start("test-cycle") { listOf(seg) }
@@ -207,6 +216,7 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `zrušení scope instance zruší cyklus a zastaví proces`() = runBlocking {
         val seg = segment(10_000)
         player.start("test-cycle") { listOf(seg) }
@@ -225,6 +235,7 @@ class SegmentCyclePlayerTest {
     // ============================================================
 
     @Test
+    @RequiresPidNamespace
     fun `whilePlaying běží po dobu segmentu a na konci se zruší`() = runBlocking {
         val sideStarted = AtomicBoolean(false)
         val sideCancelled = AtomicBoolean(false)
@@ -252,6 +263,7 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `výjimka ve whilePlaying neshodí cyklus`() = runBlocking {
         val events = ConcurrentLinkedQueue<String>()
         val bad = segment(SEGMENT_MS) {
@@ -272,6 +284,7 @@ class SegmentCyclePlayerTest {
     // ============================================================
 
     @Test
+    @RequiresPidNamespace
     fun `výjimka v prepare neshodí segment - proces se přesto spustí`() = runBlocking {
         val seg = segment(10_000) { prepare { error("simulovaná chyba přípravy") } }
 
@@ -283,6 +296,7 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `neexistující příkaz neshodí cyklus - pokračuje se dalším segmentem`() = runBlocking {
         val events = ConcurrentLinkedQueue<String>()
         val broken = segment(SEGMENT_MS) {
@@ -300,6 +314,7 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `prázdný seznam segmentů - další pokus po emptyRetry`() = runBlocking {
         val calls = AtomicInteger(0)
         val seg = segment(10_000)
@@ -319,6 +334,7 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `výjimka v provideru neshodí cyklus - chová se jako prázdný výsledek`() = runBlocking {
         val calls = AtomicInteger(0)
         val seg = segment(10_000)
@@ -391,6 +407,7 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `nowPlaying ukazuje právě hraný segment, po stop null`() = runBlocking {
         val seg: Segment = segment(10_000)
         player.start("test-cycle") { listOf(seg) }
@@ -406,24 +423,24 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `stop skupiny ukončí playCycle a další segment už nezačne`() = runBlocking {
-        val group = processGroups("cycle-test").create("action-1", scope)
+        val group = processGroups().create("action-1", scope)
         val prepared = AtomicInteger()
-        val tagFile = File.createTempFile("tag", ".txt").apply { deleteOnExit() }
+        val startedFile = File.createTempFile("segment", ".txt").apply { deleteOnExit(); delete() }
         val cycle = scope.launch(Dispatchers.IO) {
             group.playCycle("cycle", minSegment = MIN_SEGMENT.milliseconds) {
                 listOf(
                     segment(10.seconds) {
-                        command("sh", "-c", "printf \"\$KLIB_PROCESS_TAG\" > '${tagFile.path}'; exec sleep 60")
+                        command("sh", "-c", "touch '${startedFile.path}'; exec sleep 60")
                         prepare { prepared.incrementAndGet() }
                     },
                 )
             }
         }
-        waitUntil { tagFile.readText().isNotEmpty() }
-        assertEquals("cycle-test/action-1", tagFile.readText())
+        waitUntil { startedFile.exists() }
 
-        // dřív cyklus po stop skupiny (reaper zabil segment → „pád“) hned spustil další segment
+        // skupina musí nejdřív zrušit navázaný cyklus, aby se další segment nespustil
         group.stop()
         withTimeout(5.seconds) { cycle.join() }
         delay(SETTLE_TIME.milliseconds)
@@ -431,8 +448,9 @@ class SegmentCyclePlayerTest {
     }
 
     @Test
+    @RequiresPidNamespace
     fun `stop skupiny z whilePlaying nečeká sám na sebe`() = runBlocking {
-        val group = processGroups("cycle-test").create("action-2", scope)
+        val group = processGroups().create("action-2", scope)
         val stopped = CompletableDeferred<Unit>()
         val segmentPlayer = SegmentCyclePlayer(scope, MIN_SEGMENT.milliseconds, group)
         segmentPlayer.start("cycle") {

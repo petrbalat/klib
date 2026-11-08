@@ -10,14 +10,11 @@ import kotlin.time.toKotlinDuration
 /** `klib.process.*` — java.time.Duration kvůli bindingu (`5s`, `2m`). */
 @ConfigurationProperties("klib.process")
 data class ProcessProperties(
-    /** povinné — vlastník tagu procesů, např. "cdc-client" */
+    /** povinné — vlastník událostí a metrik, např. "cdc-client" */
     val owner: String,
-    val envName: String = "KLIB_PROCESS_TAG",
     val logsDirectory: File? = null,
     val restart: Restart = Restart(),
     val gracefulStop: Duration = Duration.ofSeconds(5),
-    /** sirotci s tagem vlastníka z minulého běhu JVM se při startu zabijí */
-    val reapOrphansOnStartup: Boolean = true,
     /** strop pro zastavení skupin, které aplikace při vypnutí nezastavila */
     val shutdownTimeout: Duration = Duration.ofSeconds(8),
 ) {

@@ -6,8 +6,6 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import java.io.File
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -42,37 +40,38 @@ class RunProcessTest {
         assertTrue(System.currentTimeMillis() - started < 5_000)
     }
 
-    /** Potomek na pozadí drží zděděnou rouru výstupu — výstup procesu se nesmí zahodit a potomek přežít. */
+    /** runProcess spravuje pouze přímý proces; potomek držící zděděnou rouru může přežít. */
     @Test
-    @EnabledOnOs(OS.LINUX)
-    fun `potomek držící rouru výstup nezahodí a nepřežije`() = runBlocking {
+    fun `potomek držící rouru může přežít konec přímého procesu`() = runBlocking {
         val pidFile = File(dir, "child.pid")
-        val result = runProcess("sh", "-c", "echo result; sleep 1000 & echo \$! > ${pidFile.path}") { timeout = 5.seconds }
-        assertEquals(0, result.exitValue)
-        assertEquals("result", result.output.trim())
-        waitUntil { !isPidAlive(pidFile.readText().trim().toLong()) }
+        try {
+            val result = runProcess("sh", "-c", "echo result; sleep 1000 & echo \$! > ${pidFile.path}") { timeout = 5.seconds }
+            val child = pidFile.readText().trim().toLong()
+            assertEquals(0, result.exitValue)
+            assertEquals("result", result.output.trim())
+            assertTrue(isPidAlive(child), "runProcess nespravuje potomky")
+        } finally {
+            killPids(pidFile)
+        }
     }
 
-    /** Normální konec rodiče musí uklidit i odpojeného potomka, který nedrží výstupní rouru. */
+    /** Normální konec rodiče nesmí zaměnit nespravované procesy s cizími spuštěními. */
     @Test
-    @EnabledOnOs(OS.LINUX)
-    fun `nenulový konec uklidí odpojeného potomka a nezasáhne cizí proces`() = runBlocking {
+    fun `runProcess ponechá potomka i nesouvisející proces běžet`() = runBlocking {
         val pidFile = File(dir, "orphan.pid")
         val unrelated = ProcessBuilder("sleep", "1000").start()
-        var orphanPid: Long? = null
         try {
             val result = runProcess("sh", "-c", "sleep 1000 >/dev/null 2>&1 & echo \$! > '${pidFile.path}'; exit 7") {
                 timeout = 5.seconds
             }
             val pid = pidFile.readText().trim().toLong()
-            orphanPid = pid
 
             assertEquals(7, result.exitValue)
             assertFalse(result.timedOut)
-            waitUntil { !isPidAlive(pid) }
-            assertTrue(unrelated.isAlive, "úklid spuštění nesmí zabít cizí proces")
+            assertTrue(isPidAlive(pid), "potomek není součástí spravovaného namespace")
+            assertTrue(unrelated.isAlive, "runProcess nesmí zasáhnout cizí proces")
         } finally {
-            orphanPid?.let { ProcessHandle.of(it).ifPresent(ProcessHandle::destroyForcibly) }
+            killPids(pidFile)
             unrelated.destroyForcibly()
         }
     }
@@ -87,17 +86,20 @@ class RunProcessTest {
         assertTrue(result.output.endsWith("xEND"))
     }
 
-    /** Démon po double-forku (mimo strom, rouru nedrží) — dřív přežil timeout, i když zrušení korutiny ne. */
+    /** Timeout zabije přímý proces; oddělený potomek není spravován runProcess. */
     @Test
-    @EnabledOnOs(OS.LINUX)
-    fun `timeout zabije i odpojeného potomka mimo strom`() = runBlocking {
+    fun `timeout zabije přímý proces ale ne odpojeného potomka`() = runBlocking {
         val pidFile = File(dir, "daemon.pid")
-        val result = runProcess("sh", "-c", "(sleep 1000 >/dev/null 2>&1 & echo \$! > '${pidFile.path}'); sleep 100") {
-            timeout = 500.milliseconds
+        try {
+            val result = runProcess("sh", "-c", "(sleep 1000 >/dev/null 2>&1 & echo \$! > '${pidFile.path}'); exec sleep 100") {
+                timeout = 500.milliseconds
+            }
+            val daemon = pidFile.readText().trim().toLong()
+            assertTrue(result.timedOut)
+            assertTrue(isPidAlive(daemon), "runProcess neukončuje procesy mimo vlastní PID")
+        } finally {
+            killPids(pidFile)
         }
-        assertTrue(result.timedOut)
-        val daemon = pidFile.readText().trim().toLong()
-        waitUntil { !isPidAlive(daemon) }
     }
 
     @Test
@@ -121,19 +123,23 @@ class RunProcessTest {
     }
 
     @Test
-    fun `zrušení korutiny zabije proces i potomky`() = runBlocking {
+    fun `zrušení korutiny zabije přímý proces ale ne potomka`() = runBlocking {
         val pids = File(dir, "pids")
         // IO — waitUntil níže blokuje vlákno runBlocking
         val job = async(Dispatchers.IO) {
             runProcess("sh", "-c", "sleep 30 & echo \$\$ \$! > '${pids.path}'; wait") { timeout = 30.seconds }
         }
-        waitUntil { pids.exists() && pids.readText().isNotBlank() }
-        val (shell, child) = pids.readText().trim().split(" ").map { it.toLong() }
-
-        job.cancelAndJoin()
-        delay(100)
-        assertFalse(isPidAlive(shell), "shell")
-        assertFalse(isPidAlive(child), "potomek")
+        try {
+            waitUntil { pids.exists() && pids.readText().isNotBlank() }
+            val (shell, child) = pids.readText().trim().split(" ").map { it.toLong() }
+            job.cancelAndJoin()
+            delay(100)
+            assertFalse(isPidAlive(shell), "shell")
+            assertTrue(isPidAlive(child), "potomek není součástí spravovaného procesu")
+        } finally {
+            job.cancelAndJoin()
+            killPids(pids)
+        }
     }
 
     @Test
@@ -163,5 +169,68 @@ class RunProcessTest {
         }
         assertTrue(error.result.timedOut)
         assertTrue("timed out" in error.message!!)
+    }
+
+    /** isolated: potomek držící rouru skončí s příkazem — výsledek bez čekání na OUTPUT_GRACE */
+    @Test
+    @RequiresPidNamespace
+    fun `isolated - konec příkazu ukončí i potomka na pozadí`() = runBlocking {
+        val started = System.currentTimeMillis()
+        val result = runProcess("sh", "-c", "sleep 1231 & echo result") {
+            timeout = 5.seconds
+            isolated = true
+        }
+        assertEquals(0, result.exitValue)
+        assertEquals("result", result.output.trim())
+        assertTrue(System.currentTimeMillis() - started < 3_000, "výstup nesmí čekat na potomka")
+        waitUntil { liveSleeps("1231") == 0 }
+    }
+
+    @Test
+    @RequiresPidNamespace
+    fun `isolated - timeout ukončí celou pipeline`() = runBlocking {
+        val result = runProcess("sh", "-c", "sleep 1232 | sleep 1233") {
+            timeout = 500.milliseconds
+            isolated = true
+        }
+        assertTrue(result.timedOut)
+        waitUntil { liveSleeps("1232") == 0 && liveSleeps("1233") == 0 }
+    }
+
+    @Test
+    @RequiresPidNamespace
+    fun `isolated - zrušení korutiny ukončí namespace`() = runBlocking {
+        val job = async(Dispatchers.IO) {
+            runProcess("sh", "-c", "sleep 1234 | sleep 1235") { timeout = 30.seconds; isolated = true }
+        }
+        waitUntil { liveSleeps("1234") == 1 && liveSleeps("1235") == 1 }
+        job.cancelAndJoin()
+        waitUntil { liveSleeps("1234") == 0 && liveSleeps("1235") == 0 }
+    }
+
+    @Test
+    @RequiresPidNamespace
+    fun `isolated - stdin, env a exit kód projdou wrapperem`() = runBlocking {
+        val result = runProcess("sh", "-c", "cat; printf \" \$GREETING\"; exit 3") {
+            timeout = 5.seconds
+            stdin("ahoj")
+            env("GREETING", "světe")
+            isolated = true
+        }
+        assertEquals(3, result.exitValue)
+        assertEquals("ahoj světe", result.output)
+    }
+
+    /** živé `sleep <argument>` — unikátní délka odliší procesy testu */
+    private fun liveSleeps(argument: String): Int = ProcessHandle.allProcesses().filter {
+        it.isAlive && it.info().command().orElse("").endsWith("/sleep") &&
+            it.info().arguments().orElse(emptyArray()).contentEquals(arrayOf(argument))
+    }.count().toInt()
+
+    private fun killPids(file: File) {
+        val pids = runCatching { file.readText() }.getOrDefault("")
+        pids.split(Regex("\\s+")).mapNotNull(String::toLongOrNull).forEach { pid ->
+            ProcessHandle.of(pid).ifPresent { it.destroyForcibly() }
+        }
     }
 }

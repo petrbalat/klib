@@ -43,12 +43,15 @@ pipelines:
                 - info
                 run_if: passed
             # check = test všech modulů + dockerTest (Linux testy spring-boot-process)
+            # requirePidNamespace: bez user/PID namespace v Dockeru spadnout, ne přeskočit namespace testy
+            # (server: kernel.apparmor_restrict_unprivileged_userns=0 v /etc/sysctl.d/60-klib-userns.conf)
             - exec:
                 command: sh
                 arguments:
                 - ./gradlew
                 - clean
                 - check
+                - -Pklib.process.requirePidNamespace=true
                 - --no-daemon
                 run_if: passed
 

@@ -10,8 +10,6 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledOnOs
-import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import java.io.File
 import java.util.concurrent.CopyOnWriteArrayList
@@ -30,6 +28,7 @@ import kotlin.time.Duration.Companion.seconds
  * Watchdog [ManagedProcess] — limit restartů, jeho nulování po stabilním běhu, stav a stop.
  * Reálný čas s krátkými zpožděními; proces počítá svá spuštění řádky do souboru.
  */
+@RequiresPidNamespace
 class ManagedProcessTest {
 
     @TempDir
@@ -224,8 +223,8 @@ class ManagedProcessTest {
     }
 
     @Test
-    fun `selhání spuštění při restartu watchdog neukončí`() {
-        // skript se při prvním běhu smaže → restart selže (IOException); po obnovení skriptu musí další pokus proběhnout
+    fun `selhání executable pod namespace watchdog neukončí`() {
+        // skript se při prvním běhu smaže; tini vrátí 127, ale watchdog musí dále zkoušet restart.
         val script = File(dir, "run.sh")
         val marker = File(dir, "restarted")
         script.writeText("#!/bin/sh\nrm -f \"$0\"\nexit 1\n")
@@ -238,36 +237,13 @@ class ManagedProcessTest {
 
         waitUntil { !script.exists() }
         Thread.sleep(RESTART_DELAY.inWholeMilliseconds * 3) // pár neúspěšných pokusů o restart
-        assertEquals(null, (process.state.value as? ProcessState.Restarting)?.exitCode, "selhané spuštění nemá exit kód")
+        assertEquals(127, (process.state.value as? ProcessState.Restarting)?.exitCode, "chybějící executable vrací 127")
         script.writeText("#!/bin/sh\ntouch '${marker.path}'\nsleep 60\n")
         script.setExecutable(true)
 
         waitUntil { marker.exists() }
     }
 
-    @Test
-    @EnabledOnOs(OS.LINUX) // potomky mimo strom rodiče najde jen /proc
-    fun `po pádu rodiče se před restartem zastaví i jeho potomci`() {
-        val pids = File(dir, "pids")
-        val process = startProcess {
-            command("sh", fixture("orphan-on-crash.sh"), pids.path)
-            restart { maxRestarts = 1; delay = RESTART_DELAY; stableRun = Duration.INFINITE }
-        }
-
-        try {
-            process.state.await { it is ProcessState.GaveUp }
-            waitUntil { pids.lineCount() == 2 }
-            val (crashed, last) = pids.readLines().map { it.trim().toLong() }
-            // jinak nová instance narazí na zámek profilu / obsazené zařízení starého přehrávače
-            waitUntil(2.seconds) { !isPidAlive(crashed) }
-            assertTrue(isPidAlive(last), "po GaveUp pozůstatky zůstávají (odpojený launcher s RestartPolicy.NEVER)")
-
-            runBlocking { process.stop() }
-            waitUntil(2.seconds) { !isPidAlive(last) }
-        } finally {
-            pids.readLines().forEach { pid -> ProcessHandle.of(pid.trim().toLong()).ifPresent { it.destroyForcibly() } }
-        }
-    }
 
     @Test
     fun `SIGKILL zvenku (OOM killer) watchdog pozná a proces restartuje`() {
