@@ -12,6 +12,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && echo 'pi ALL=(root) NOPASSWD: /usr/bin/sleep' > /etc/sudoers.d/010-pi \
     && chmod 0440 /etc/sudoers.d/010-pi \
     && rm -rf /var/lib/apt/lists/*
+# Skutečné aplikace kiosku pro ChromiumProcessTest a LibreOfficeProcessTest — vlastní vrstva (~1,4 GB), ať změna
+# základu výše nestahuje znovu i je. Headless běh, bez Waylandu; LibreOffice v nogui variantě (stejný oosplash/soffice.bin).
+RUN apt-get update && apt-get install -y --no-install-recommends chromium libreoffice-impress-nogui fonts-dejavu-core \
+    && rm -rf /var/lib/apt/lists/*
 # UTF-8 názvy souborů — jinak JVM nenačte třídy lambd v testech s diakritikou v názvu
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8

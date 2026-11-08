@@ -190,7 +190,8 @@ group.runProcess(listOf("sh", "-c", "piper --output-raw | aplay -")) {
 `dockerTest` ověřuje celý Linux test suite na CDC-like image (Debian trixie, JRE 25, uid 1000, skupiny zařízení,
 `tini -s`, shell s `exec java`). Před spuštěním `dockerTestPreflight` ověří namespace; bez něj se `dockerTest`
 přeskočí s varováním, s `-Pklib.process.requirePidNamespace=true` (GoCD) build selže. Používá stejné
-capabilities/security options jako CDC (včetně `apparmor=unconfined`), bez `--privileged` a bez hostitelských cgroups. Testovací image nemá Wayland ani skutečná zařízení.
+capabilities/security options jako CDC (včetně `apparmor=unconfined`), bez `--privileged` a bez hostitelských cgroups. Testovací image nemá Wayland ani skutečná zařízení; obsahuje Chromium a LibreOffice Impress pro testy
+se skutečnými aplikacemi (headless).
 
 Verzi lze lokálně publikovat pro CDC přes `./gradlew :spring-boot-process:publishToMavenLocal`; běžná publikace do
 GitHub Packages používá `./gradlew :spring-boot-process:publish`.

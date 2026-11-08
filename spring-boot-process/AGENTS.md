@@ -126,6 +126,12 @@ v balíčku Boot 4 i Boot 3 — bez toho `@ConditionalOnBean(MeterRegistry)` bea
   `listOf("sh", fixture("x.sh"))`, takže na spustitelných právech po kopírování resources nezáleží.
 - Fixtures simulují konkrétní chování: `forker.sh` (Chromium s renderery), `ignore-term.sh` (ignoruje SIGTERM),
   `crash-loop.sh` (pád s kódem 3), `chatty.sh` (výstup > 64 KB).
+- `ChromiumProcessTest` a `LibreOfficeProcessTest` (`@RequiresDockerTestImage`) spouštějí skutečné aplikace z image
+  s volbami CDC, jen `--headless`: stop přes SIGTERM bez eskalace, úklid zygote/rendereru a `oosplash`/`soffice.bin`,
+  restart po pádu se starými zámky. Zjištěné chování: v PID namespace ProcessSingleton Chromia nezastaví druhou
+  instanci nad stejným profilem (souběžná Chromia potřebují vlastní `--user-data-dir`); první start nového profilu
+  LibreOffice spouští `soffice.bin` dvakrát (PID až po načtení dokumentu); `.~lock.<dokument>#` vzniká i s `--view`,
+  zámek z jiného profilu headless start ukončí kódem 0.
 - Podmínky v `testConditions.kt`: test, který spouští spravovaný proces (`ManagedProcess`, `start`, segment cyklu,
   `runProcess` s `isolated`), má `@RequiresPidNamespace` (běží jen tam, kde projde `checkPidNamespaceSupport()`);
   test závislý na testovacím image (uživatel `pi`, skupiny zařízení) má `@RequiresDockerTestImage`
